@@ -51,9 +51,18 @@
       </div>
 
       <div class="space-y-4 bg-gray-900 p-5 rounded-2xl border border-gray-800 shadow-xl">
-        <div>
-          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Tu Nombre</label>
-          <input type="text" id="input-username" placeholder="Ej: Alex" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500">
+        
+        <!-- USERNAME & AVATAR UPLOAD -->
+        <div class="flex items-center space-x-4">
+          <div class="relative w-16 h-16 rounded-full bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center shrink-0 cursor-pointer shadow-inner" onclick="document.getElementById('input-avatar-file').click()">
+            <img id="avatar-preview-img" class="w-full h-full object-cover hidden" alt="Avatar">
+            <i id="avatar-preview-icon" class="fa-solid fa-camera text-gray-400 text-xl"></i>
+          </div>
+          <div class="flex-1">
+            <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Tu Nombre y Foto</label>
+            <input type="text" id="input-username" placeholder="Ej: Alex" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 text-sm">
+            <input type="file" id="input-avatar-file" accept="image/*" class="hidden" onchange="previewAvatar(event)">
+          </div>
         </div>
 
         <div class="pt-2 border-t border-gray-800">
@@ -93,7 +102,18 @@
           </ul>
         </div>
 
-        <div id="gm-controls" class="hidden pt-4 border-t border-gray-800">
+        <!-- GM CONTROLS & TIMER CONFIG -->
+        <div id="gm-controls" class="hidden pt-4 border-t border-gray-800 space-y-3">
+          <div class="text-left">
+            <label class="block text-xs text-gray-400 mb-1">Tiempo Límite de Ronda (Minutos):</label>
+            <select id="select-timer" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white text-xs font-mono">
+              <option value="2">2 Minutos</option>
+              <option value="5" selected>5 Minutos</option>
+              <option value="10">10 Minutos</option>
+              <option value="15">15 Minutos</option>
+            </select>
+          </div>
+
           <button onclick="startGame()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-xl transition text-sm shadow-lg shadow-red-600/30">
             Iniciar Partida
           </button>
@@ -101,8 +121,17 @@
       </div>
     </section>
 
-    <!-- VIEW 3: ACTIVE GAME (MINIMALIST HUD LAYOUT) -->
+    <!-- VIEW 3: ACTIVE GAME (MINIMALIST HUD LAYOUT WITH TIMER) -->
     <section id="view-game" class="hidden space-y-4">
+
+      <!-- ROUND TIMER BANNER -->
+      <div class="bg-gray-900 border border-gray-800 px-4 py-2.5 rounded-xl flex justify-between items-center">
+        <span class="text-xs text-gray-400 font-semibold uppercase flex items-center">
+          <i class="fa-solid fa-stopwatch text-red-500 mr-2"></i>Tiempo Restante:
+        </span>
+        <span id="round-timer" class="font-mono text-lg font-black text-red-500">00:00</span>
+      </div>
+
       <div class="bg-gray-900 border border-gray-800 p-5 rounded-2xl space-y-5 text-center">
         
         <!-- MINIMALIST LAYOUT: HUNTER (LEFT) | DISTANCE (CENTER) | TARGET (RIGHT) -->
@@ -110,7 +139,9 @@
           
           <!-- LEFT: HUNTER INFO -->
           <div class="flex flex-col items-center space-y-1 w-1/3">
-            <div id="hunter-avatar" class="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-lg shadow-md">U</div>
+            <div id="hunter-avatar-container" class="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-lg shadow-md overflow-hidden border border-red-500">
+              <span id="hunter-avatar-text">U</span>
+            </div>
             <span id="hunter-name-display" class="text-xs font-bold text-gray-300 truncate max-w-[90px]">Tú</span>
             <span class="text-[9px] text-gray-500 uppercase">Cazador</span>
           </div>
@@ -123,7 +154,9 @@
 
           <!-- RIGHT: TARGET INFO -->
           <div class="flex flex-col items-center space-y-1 w-1/3">
-            <div id="target-avatar" class="w-12 h-12 rounded-full bg-gray-800 border border-gray-700 text-red-500 flex items-center justify-center font-bold text-lg shadow-md">O</div>
+            <div id="target-avatar-container" class="w-12 h-12 rounded-full bg-gray-800 border border-gray-700 text-red-500 flex items-center justify-center font-bold text-lg shadow-md overflow-hidden">
+              <span id="target-avatar-text">O</span>
+            </div>
             <span id="target-name" class="text-xs font-bold text-white truncate max-w-[90px]">...</span>
             <span class="text-[9px] text-red-500 uppercase font-semibold">Objetivo</span>
           </div>
@@ -149,15 +182,18 @@
       </div>
     </section>
 
-    <!-- VIEW 4: CAMERA CAPTURE -->
+    <!-- VIEW 4: CAMERA CAPTURE WITH OVERLAY CANVAS -->
     <section id="view-camera" class="hidden fixed inset-0 bg-black z-50 flex flex-col justify-between">
       <div class="relative flex-1 bg-black flex items-center justify-center">
-        <video id="camera-preview" autoplay playsinline muted class="w-full h-full object-cover"></video>
+        <!-- Hidden video source stream -->
+        <video id="camera-preview" autoplay playsinline muted class="hidden"></video>
+        <!-- Canvas rendering camera + hud overlay -->
+        <canvas id="camera-canvas" class="w-full h-full object-cover"></canvas>
 
         <!-- RECORDING INDICATOR -->
-        <div class="absolute top-6 left-6 bg-black/60 px-3 py-1.5 rounded-full border border-red-500/30 flex items-center space-x-2">
+        <div class="absolute top-6 left-6 bg-black/60 px-3 py-1.5 rounded-full border border-red-500/30 flex items-center space-x-2 pointer-events-none">
           <div class="w-2.5 h-2.5 bg-red-600 rounded-full animate-ping"></div>
-          <span class="text-xs font-mono text-white tracking-wider">GRABANDO</span>
+          <span class="text-xs font-mono text-white tracking-wider">GRABANDO HUD</span>
         </div>
       </div>
 
@@ -171,12 +207,21 @@
       </div>
     </section>
 
-    <!-- VIEW 5: ELIMINATED / ROUND OVER -->
+    <!-- VIEW 5: ELIMINATED / CAPTURE SUCCESS -->
     <section id="view-eliminated" class="hidden text-center space-y-4">
       <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-3">
         <i class="fa-solid fa-check-circle text-4xl text-green-500"></i>
         <h2 class="text-xl font-bold text-white">¡Captura Registrada!</h2>
-        <p class="text-xs text-gray-400">Tu vídeo se ha descargado a tu dispositivo y ha sido enviado al Game Master.</p>
+        <p class="text-xs text-gray-400">Tu vídeo con overlay se ha descargado a tu dispositivo y enviado al Game Master.</p>
+      </div>
+    </section>
+
+    <!-- VIEW 6: TIME EXPIRED -->
+    <section id="view-timeout" class="hidden text-center space-y-4">
+      <div class="bg-gray-900 p-6 rounded-2xl border border-red-900/50 space-y-3">
+        <i class="fa-solid fa-hourglass-end text-4xl text-red-500"></i>
+        <h2 class="text-xl font-bold text-white">¡Tiempo Agotado!</h2>
+        <p class="text-xs text-gray-400">Ha finalizado el tiempo límite de la ronda sin completar la cacería.</p>
       </div>
     </section>
 
@@ -195,12 +240,32 @@
     let isGM = false;
     let myId = '';
     let myUsername = '';
-    let currentTarget = null;
+    let myAvatarBase64 = '';
+    let currentTarget = null; // { name, dist, avatar }
     let watchId = null;
     let myCoords = { lat: 0, lng: 0, accuracy: 0 };
     let mediaRecorder = null;
     let recordedChunks = [];
     let players = []; 
+    let timerInterval = null;
+    let roundSecondsRemaining = 300;
+    let canvasAnimId = null;
+
+    // Handle avatar image selection preview
+    function previewAvatar(event) {
+      const file = event.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        myAvatarBase64 = e.target.result;
+        const img = document.getElementById('avatar-preview-img');
+        const icon = document.getElementById('avatar-preview-icon');
+        img.src = myAvatarBase64;
+        img.classList.remove('hidden');
+        icon.classList.add('hidden');
+      };
+      reader.readAsDataURL(file);
+    }
 
     function initPeer(customId = null) {
       return new Promise((resolve) => {
@@ -226,11 +291,14 @@
       document.getElementById('gm-video-panel').classList.remove('hidden');
       switchView('view-waiting');
 
-      players = [{ id: myId, name: myUsername + ' (GM)', lat: 0, lng: 0 }];
+      players = [{ id: myId, name: myUsername + ' (GM)', avatar: myAvatarBase64, lat: 0, lng: 0 }];
       updatePlayerList(players);
 
       peer.on('connection', (conn) => {
         connections.push(conn);
+        conn.on('open', () => {
+          conn.send({ type: 'PLAYER_LIST', list: players });
+        });
         conn.on('data', (data) => handleGMData(data, conn));
       });
 
@@ -247,7 +315,7 @@
       hostConn = peer.connect(roomCode);
 
       hostConn.on('open', () => {
-        hostConn.send({ type: 'JOIN', name: myUsername, id: myId });
+        hostConn.send({ type: 'JOIN', name: myUsername, avatar: myAvatarBase64, id: myId });
         switchView('view-waiting');
         document.getElementById('display-room-code').textContent = roomCode;
         startGPS();
@@ -258,7 +326,7 @@
 
     function handleGMData(data, conn) {
       if(data.type === 'JOIN') {
-        players.push({ id: data.id, name: data.name, lat: 0, lng: 0 });
+        players.push({ id: data.id, name: data.name, avatar: data.avatar, lat: 0, lng: 0 });
         broadcastState();
       } else if(data.type === 'GPS_UPDATE') {
         const p = players.find(x => x.id === data.id);
@@ -272,7 +340,9 @@
 
     function broadcastState() {
       updatePlayerList(players);
-      connections.forEach(c => c.send({ type: 'PLAYER_LIST', list: players }));
+      connections.forEach(c => {
+        if(c.open) c.send({ type: 'PLAYER_LIST', list: players });
+      });
     }
 
     function calculateAndBroadcastDistances() {
@@ -284,13 +354,13 @@
         const dist = haversine(hunter.lat, hunter.lng, target.lat, target.lng);
 
         if(hunter.id === myId) {
-          updateHunterDisplay(target.name, dist);
+          updateHunterDisplay(target, dist);
         } else {
           const conn = connections.find(c => c.peer === hunter.id);
-          if(conn) {
+          if(conn && conn.open) {
             conn.send({ 
               type: 'TARGET_ASSIGNMENT', 
-              target: { name: target.name }, 
+              target: { name: target.name, avatar: target.avatar }, 
               distance: dist 
             });
           }
@@ -302,22 +372,34 @@
       if(data.type === 'PLAYER_LIST') {
         updatePlayerList(data.list);
       } else if(data.type === 'START_GAME') {
+        roundSecondsRemaining = data.duration;
+        startRoundTimer();
         switchView('view-game');
       } else if(data.type === 'TARGET_ASSIGNMENT') {
-        updateHunterDisplay(data.target.name, data.distance);
+        updateHunterDisplay(data.target, data.distance);
       }
     }
 
-    function updateHunterDisplay(targetName, distance) {
-      currentTarget = { name: targetName, dist: distance };
+    function updateHunterDisplay(target, distance) {
+      currentTarget = { name: target.name, avatar: target.avatar, dist: distance };
       
-      // Update Hunter Info
+      // Update Hunter UI
       document.getElementById('hunter-name-display').textContent = myUsername;
-      document.getElementById('hunter-avatar').textContent = myUsername.charAt(0).toUpperCase();
+      const hunterContainer = document.getElementById('hunter-avatar-container');
+      if(myAvatarBase64) {
+        hunterContainer.innerHTML = `<img src="${myAvatarBase64}" class="w-full h-full object-cover">`;
+      } else {
+        hunterContainer.innerHTML = `<span id="hunter-avatar-text">${myUsername.charAt(0).toUpperCase()}</span>`;
+      }
 
-      // Update Target Info
-      document.getElementById('target-name').textContent = targetName;
-      document.getElementById('target-avatar').textContent = targetName.charAt(0).toUpperCase();
+      // Update Target UI
+      document.getElementById('target-name').textContent = target.name;
+      const targetContainer = document.getElementById('target-avatar-container');
+      if(target.avatar) {
+        targetContainer.innerHTML = `<img src="${target.avatar}" class="w-full h-full object-cover">`;
+      } else {
+        targetContainer.innerHTML = `<span id="target-avatar-text">${target.name.charAt(0).toUpperCase()}</span>`;
+      }
       
       const distFormatted = isNaN(distance) || distance === 0 ? '--' : Math.round(distance);
       document.getElementById('radar-distance').innerHTML = `${distFormatted} <span class="text-xs text-gray-500">m</span>`;
@@ -327,7 +409,12 @@
       const ul = document.getElementById('player-list');
       ul.innerHTML = list.map(p => `
         <li class="bg-gray-800 px-3 py-2 rounded-xl text-xs flex justify-between items-center">
-          <span><i class="fa-solid fa-user text-red-500 mr-2"></i>${p.name}</span>
+          <span class="flex items-center space-x-2">
+            <div class="w-6 h-6 rounded-full bg-gray-700 overflow-hidden flex items-center justify-center font-bold text-[10px]">
+              ${p.avatar ? `<img src="\${p.avatar}" class="w-full h-full object-cover">` : p.name.charAt(0)}
+            </div>
+            <span>${p.name}</span>
+          </span>
           <span class="text-[10px] text-green-400 font-mono">Conectado</span>
         </li>
       `).join('');
@@ -346,7 +433,7 @@
             const gmPlayer = players.find(p => p.id === myId);
             if(gmPlayer) { gmPlayer.lat = myCoords.lat; gmPlayer.lng = myCoords.lng; }
             calculateAndBroadcastDistances();
-          } else if(hostConn) {
+          } else if(hostConn && hostConn.open) {
             hostConn.send({ type: 'GPS_UPDATE', id: myId, lat: myCoords.lat, lng: myCoords.lng });
           }
         }, err => console.error(err), { enableHighAccuracy: true });
@@ -366,13 +453,126 @@
       switchView('view-camera');
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true });
-        document.getElementById('camera-preview').srcObject = stream;
+        const video = document.getElementById('camera-preview');
+        video.srcObject = stream;
+        await video.play();
+
+        startCanvasOverlayLoop();
       } catch(e) {
         alert('Error al acceder a la cámara.');
       }
     }
 
+    // Helper to load image for Canvas drawing
+    function loadImage(src) {
+      return new Promise((resolve) => {
+        if(!src) { resolve(null); return; }
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+    }
+
+    function startCanvasOverlayLoop() {
+      const video = document.getElementById('camera-preview');
+      const canvas = document.getElementById('camera-canvas');
+      const ctx = canvas.getContext('2d');
+
+      async function draw() {
+        if(video.paused || video.ended) return;
+
+        canvas.width = video.videoWidth || 1280;
+        canvas.height = video.videoHeight || 720;
+
+        // 1. Draw Camera Feed
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // 2. Draw HUD Overlay box at bottom
+        const boxWidth = canvas.width * 0.9;
+        const boxHeight = 110;
+        const boxX = (canvas.width - boxWidth) / 2;
+        const boxY = canvas.height - boxHeight - 30;
+
+        ctx.fillStyle = "rgba(13, 17, 23, 0.85)";
+        ctx.strokeStyle = "rgba(239, 68, 68, 0.6)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 16);
+        ctx.fill();
+        ctx.stroke();
+
+        // 3. Draw Hunter Avatar & Info (Left)
+        const hunterImg = await loadImage(myAvatarBase64);
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(boxX + 60, boxY + 45, 28, 0, 2 * Math.PI);
+        ctx.clip();
+        if(hunterImg) {
+          ctx.drawImage(hunterImg, boxX + 32, boxY + 17, 56, 56);
+        } else {
+          ctx.fillStyle = "#dc2626";
+          ctx.fillRect(boxX + 32, boxY + 17, 56, 56);
+          ctx.fillStyle = "#ffffff";
+          ctx.font = "bold 24px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(myUsername.charAt(0).toUpperCase(), boxX + 60, boxY + 53);
+        }
+        ctx.restore();
+
+        ctx.font = "bold 14px sans-serif";
+        ctx.fillStyle = "#e6edf3";
+        ctx.textAlign = "center";
+        ctx.fillText(myUsername, boxX + 60, boxY + 92);
+        ctx.font = "10px sans-serif";
+        ctx.fillStyle = "#9ca3af";
+        ctx.fillText("CAZADOR", boxX + 60, boxY + 104);
+
+        // 4. Draw Distance (Center)
+        const distVal = currentTarget && !isNaN(currentTarget.dist) ? Math.round(currentTarget.dist) + " m" : "-- m";
+        ctx.font = "10px sans-serif";
+        ctx.fillStyle = "#9ca3af";
+        ctx.fillText("DISTANCIA", boxX + boxWidth / 2, boxY + 38);
+
+        ctx.font = "bold 28px monospace";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(distVal, boxX + boxWidth / 2, boxY + 74);
+
+        // 5. Draw Target Avatar & Info (Right)
+        const targetName = currentTarget ? currentTarget.name : "???";
+        const targetAvatarSrc = currentTarget ? currentTarget.avatar : null;
+        const targetImg = await loadImage(targetAvatarSrc);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(boxX + boxWidth - 60, boxY + 45, 28, 0, 2 * Math.PI);
+        ctx.clip();
+        if(targetImg) {
+          ctx.drawImage(targetImg, boxX + boxWidth - 88, boxY + 17, 56, 56);
+        } else {
+          ctx.fillStyle = "#374151";
+          ctx.fillRect(boxX + boxWidth - 88, boxY + 17, 56, 56);
+          ctx.fillStyle = "#ef4444";
+          ctx.font = "bold 24px sans-serif";
+          ctx.fillText(targetName.charAt(0).toUpperCase(), boxX + boxWidth - 60, boxY + 53);
+        }
+        ctx.restore();
+
+        ctx.font = "bold 14px sans-serif";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(targetName, boxX + boxWidth - 60, boxY + 92);
+        ctx.font = "10px sans-serif";
+        ctx.fillStyle = "#ef4444";
+        ctx.fillText("OBJETIVO", boxX + boxWidth - 60, boxY + 104);
+
+        canvasAnimId = requestAnimationFrame(draw);
+      }
+
+      draw();
+    }
+
     function closeCamera() {
+      cancelAnimationFrame(canvasAnimId);
       const video = document.getElementById('camera-preview');
       if(video.srcObject) {
         video.srcObject.getTracks().forEach(track => track.stop());
@@ -382,6 +582,7 @@
 
     function toggleRecording() {
       const btn = document.getElementById('btn-record');
+      const canvas = document.getElementById('camera-canvas');
       const video = document.getElementById('camera-preview');
 
       if(mediaRecorder && mediaRecorder.state === 'recording') {
@@ -390,25 +591,32 @@
         btn.classList.add('bg-red-600');
       } else {
         recordedChunks = [];
-        mediaRecorder = new MediaRecorder(video.srcObject);
+        
+        const canvasStream = canvas.captureStream(30);
+        const audioStream = video.srcObject;
+        
+        const combinedStream = new MediaStream([
+          ...canvasStream.getVideoTracks(),
+          ...audioStream.getAudioTracks()
+        ]);
+
+        mediaRecorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm;codecs=vp9' });
         mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
         mediaRecorder.onstop = async () => {
-          const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+          const blob = new Blob(recordedChunks, { type: 'video/webm' });
 
-          // 1. Download locally for the hunter (as implemented before)
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `SicarioCapture_${Date.now()}.mp4`;
+          a.download = `SicarioCapture_${Date.now()}.webm`;
           a.click();
 
-          // 2. Send video directly to GM via P2P
           const arrayBuffer = await blob.arrayBuffer();
           const targetName = currentTarget ? currentTarget.name : 'OBJETIVO';
 
           if(isGM) {
             addGMReceivedVideo(myUsername, targetName, blob);
-          } else if(hostConn) {
+          } else if(hostConn && hostConn.open) {
             hostConn.send({ 
               type: 'VIDEO_SUBMISSION', 
               hunter: myUsername, 
@@ -417,6 +625,7 @@
             });
           }
 
+          clearInterval(timerInterval);
           closeCamera();
           switchView('view-eliminated');
         };
@@ -428,7 +637,7 @@
 
     function addGMReceivedVideo(hunterName, targetName, blob) {
       const list = document.getElementById('gm-video-list');
-      if(list.querySelector('p')) list.innerHTML = ''; // Remove placeholder
+      if(list.querySelector('p')) list.innerHTML = '';
 
       const videoUrl = URL.createObjectURL(blob);
       const item = document.createElement('div');
@@ -443,15 +652,42 @@
       list.prepend(item);
     }
 
+    function startRoundTimer() {
+      clearInterval(timerInterval);
+      const timerDisplay = document.getElementById('round-timer');
+
+      timerInterval = setInterval(() => {
+        roundSecondsRemaining--;
+        if(roundSecondsRemaining <= 0) {
+          clearInterval(timerInterval);
+          timerDisplay.textContent = "00:00";
+          switchView('view-timeout');
+          return;
+        }
+
+        const mins = Math.floor(roundSecondsRemaining / 60);
+        const secs = roundSecondsRemaining % 60;
+        timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      }, 1000);
+    }
+
     function startGame() {
       if(!isGM) return;
-      connections.forEach(c => c.send({ type: 'START_GAME' }));
+
+      const durationMinutes = parseInt(document.getElementById('select-timer').value, 10) || 5;
+      roundSecondsRemaining = durationMinutes * 60;
+
+      connections.forEach(c => {
+        if(c.open) c.send({ type: 'START_GAME', duration: roundSecondsRemaining });
+      });
+
+      startRoundTimer();
       calculateAndBroadcastDistances();
       switchView('view-game');
     }
 
     function switchView(viewId) {
-      ['view-lobby', 'view-waiting', 'view-game', 'view-camera', 'view-eliminated'].forEach(id => {
+      ['view-lobby', 'view-waiting', 'view-game', 'view-camera', 'view-eliminated', 'view-timeout'].forEach(id => {
         document.getElementById(id).classList.add('hidden');
       });
       document.getElementById(viewId).classList.remove('hidden');
