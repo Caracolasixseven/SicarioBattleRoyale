@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Sicario Royale P2P - Tactical HUD Engine</title>
+
+  <!-- Progressive Web App Settings -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#030712">
+
+  <!-- Tailwind CSS & FontAwesome -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700;900&display=swap" rel="stylesheet">
+
+  <!-- PeerJS for direct WebRTC connection -->
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            orbitron: ['Orbitron', 'sans-serif'],
+            mono: ['"Share Tech Mono"', 'monospace'],
+            rajdhani: ['Rajdhani', 'sans-serif']
+          },
+          colors: {
+            hud: {
+              cyan: '#00f3ff',
+              red: '#ff2a5f',
+              amber: '#ffb700',
+              dark: '#030712',
+              card: 'rgba(15, 23, 42, 0.85)'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #030712;
+      color: #f3f4f6;
+      font-family: 'Rajdhani', sans-serif;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Tactical Scanlines Effect */
+    .scanlines {
+      background: linear-gradient(
+        to bottom,
+        rgba(255,255,255,0),
+        rgba(255,255,255,0) 50%,
+        rgba(0, 243, 255, 0.05) 50%,
+        rgba(0, 243, 255, 0.05)
+      );
+      background-size: 100% 4px;
+    }
+
+    /* HUD Reticle Animations */
+    @keyframes radarPulse {
+      0% { transform: scale(0.95); opacity: 0.6; }
+      50% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.6; }
+    }
+
+    @keyframes scanSweep {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
+    }
+
+    .reticle-pulse { animation: radarPulse 2s infinite ease-in-out; }
+    .scan-line { animation: scanSweep 3s linear infinite; }
+
+    /* Corner Frames */
+    .corner-tl { top: 12px; left: 12px; border-top: 3px solid #00f3ff; border-left: 3px solid #00f3ff; }
+    .corner-tr { top: 12px; right: 12px; border-top: 3px solid #00f3ff; border-right: 3px solid #00f3ff; }
+    .corner-bl { bottom: 12px; left: 12px; border-bottom: 3px solid #00f3ff; border-left: 3px solid #00f3ff; }
+    .corner-br { bottom: 12px; right: 12px; border-bottom: 3px solid #00f3ff; border-right: 3px solid #00f3ff; }
+
+    /* Cyber Glass Card */
+    .cyber-card {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(3, 7, 18, 0.95));
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0, 243, 255, 0.2);
+      box-shadow: 0 0 20px rgba(0, 243, 255, 0.05);
+    }
+
+    .cyber-card-danger {
+      background: linear-gradient(135deg, rgba(31, 10, 20, 0.9), rgba(3, 7, 18, 0.95));
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 42, 95, 0.4);
+      box-shadow: 0 0 25px rgba(255, 42, 95, 0.15);
+    }
+  </style>
+</head>
+
+<body class="h-full flex flex-col justify-between selection:bg-hud-cyan selection:text-black overflow-x-hidden">
+
+  <!-- Toast Notification Bar -->
+  <div id="toastContainer" class="fixed top-14 left-4 right-4 z-50 flex flex-col items-center pointer-events-none transition-all duration-300 transform -translate-y-12 opacity-0">
+    <div id="toastBox" class="bg-slate-900 border border-hud-cyan text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 pointer-events-auto max-w-md w-full font-mono text-xs">
+      <i id="toastIcon" class="fa-solid fa-triangle-exclamation text-hud-cyan text-base"></i>
+      <span id="toastMessage" class="flex-1 font-bold">ALERTA DEL SISTEMA</span>
+      <button onclick="hideToast()" class="text-gray-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  </div>
+
+  <!-- Header / System Status bar -->
+  <header class="w-full bg-slate-950/90 border-b border-cyan-500/30 p-3 sticky top-0 z-40 flex justify-between items-center backdrop-blur-md">
+    <div class="flex items-center space-x-2.5">
+      <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-600 to-emerald-400 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+        <i class="fa-solid fa-crosshairs text-black text-base font-black"></i>
+      </div>
+      <div>
+        <h1 class="font-orbitron font-black text-sm tracking-widest text-white uppercase italic">
+          SICARIO<span class="text-hud-cyan">P2P</span>
+        </h1>
+        <p class="font-mono text-[9px] uppercase font-bold text-gray-400 tracking-wider">MÓDULO TÁCTICO WEBRTC</p>
+      </div>
+    </div>
+    
+    <div id="netStatusBadge" class="bg-slate-900 border border-slate-700 px-3 py-1 rounded-md text-[10px] font-mono font-bold text-amber-400 flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+      <span id="netStatusText">STANDBY</span>
+    </div>
+  </header>
+
+  <!-- Main Viewports -->
+  <main class="flex-1 overflow-y-auto p-4 max-w-md mx-auto w-full flex flex-col justify-center">
+
+    <!-- VIEW 1: LOBBY SELECTION -->
+    <section id="viewLobby" class="space-y-5">
+      <div class="text-center space-y-2 py-4">
+        <div class="inline-block p-4 rounded-2xl bg-cyan-500/10 border border-hud-cyan/30 text-hud-cyan mb-1 shadow-lg shadow-hud-cyan/10">
+          <i class="fa-solid fa-shield-halved text-4xl"></i>
+        </div>
+        <h2 class="font-orbitron text-2xl font-black italic tracking-wide text-white">RED TÁCTICA P2P</h2>
+        <p class="text-gray-400 text-xs font-mono max-w-xs mx-auto">Sin servidor central. Conexión directa encrypted WebRTC entre agentes.</p>
+      </div>
+
+      <div class="cyber-card p-5 rounded-2xl space-y-4">
+        <div>
+          <label class="block text-[10px] font-mono font-bold text-hud-cyan uppercase tracking-widest mb-1.5">Identificador del Agente</label>
+          <div class="relative">
+            <i class="fa-solid fa-user-ninja absolute left-3.5 top-3.5 text-gray-500 text-sm"></i>
+            <input type="text" id="inputAgentName" placeholder="Ej: SPECTRE_07" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-3 pl-10 text-sm font-mono text-white placeholder-gray-600 focus:outline-none focus:border-hud-cyan">
+          </div>
+        </div>
+
+        <div class="pt-2 grid grid-cols-1 gap-3">
+          <button onclick="createLobbySession()" class="bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-orbitron font-black py-3.5 px-4 rounded-xl shadow-lg transition active:scale-95 flex items-center justify-center gap-2 text-xs tracking-wider uppercase">
+            <i class="fa-solid fa-crown text-sm"></i> Crear Operación (GameMaster)
+          </button>
+        </div>
+
+        <div class="relative flex py-1 items-center">
+          <div class="flex-grow border-t border-slate-800"></div>
+          <span class="flex-shrink mx-3 text-[10px] font-mono text-gray-500 uppercase">o vincularse a canal</span>
+          <div class="flex-grow border-t border-slate-800"></div>
+        </div>
+
+        <div class="space-y-2.5">
+          <input type="text" id="inputRoomCode" placeholder="CÓDIGO CANAL (EJ: SICA-921)" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-3 text-center font-mono font-bold uppercase tracking-widest text-base text-hud-cyan placeholder-gray-600 focus:outline-none focus:border-hud-cyan">
+          <button onclick="joinLobbySession()" class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-white font-orbitron font-bold py-3.5 rounded-xl transition active:scale-95 flex items-center justify-center gap-2 text-xs uppercase tracking-wider">
+            <i class="fa-solid fa-network-wired text-hud-cyan"></i> Enlazarse a Sala
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: WAITING ROOM / BRIEFING -->
+    <section id="viewWaiting" class="hidden space-y-5">
+      <div class="cyber-card p-5 rounded-2xl space-y-4 text-center">
+        <span class="text-[10px] font-mono text-gray-400 uppercase tracking-widest block">Código de Frecuencia P2P</span>
+        <div id="displayRoomCode" class="text-3xl font-orbitron font-black text-hud-cyan tracking-widest select-all">------</div>
+        <p class="text-xs text-gray-400 font-mono">Los otros agentes deben ingresar esta frecuencia para unirse.</p>
+
+        <div class="py-2 text-left space-y-2">
+          <span class="text-[10px] font-mono font-bold text-hud-cyan uppercase tracking-wider block">Agentes en Frecuencia (<span id="countPlayers">0</span>)</span>
+          <div id="playerList" class="bg-slate-950/80 rounded-xl p-3 border border-slate-800 max-h-40 overflow-y-auto space-y-2 font-mono text-xs">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <div id="gmControls" class="hidden pt-2 border-t border-slate-800">
+          <button onclick="deployOperation()" class="w-full bg-gradient-to-r from-hud-red to-rose-600 text-white font-orbitron font-black py-3.5 rounded-xl shadow-lg transition active:scale-95 uppercase tracking-wider text-xs flex items-center justify-center gap-2">
+            <i class="fa-solid fa-play"></i> Desplegar Operación Cacería
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: RADAR / TACTICAL HUD SCREEN -->
+    <section id="viewGame" class="hidden space-y-4">
+      <div class="cyber-card-danger p-5 rounded-2xl relative overflow-hidden space-y-4">
+        <div class="flex justify-between items-center border-b border-red-900/50 pb-2">
+          <span class="text-[10px] font-mono font-black text-hud-red uppercase tracking-widest flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-hud-red animate-ping"></span> OBJETIVO ASIGNADO
+          </span>
+          <span class="text-[10px] font-mono text-gray-400">PRIORIDAD ALPHA</span>
+        </div>
+
+        <div class="flex items-center gap-4 py-2">
+          <div class="w-16 h-16 rounded-xl bg-slate-950 border border-hud-red flex items-center justify-center text-hud-red text-2xl font-black shadow-lg shadow-red-500/20 flex-shrink-0 relative overflow-hidden">
+            <i class="fa-solid fa-user-large"></i>
+            <div class="absolute inset-0 bg-hud-red/10 reticle-pulse"></div>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h3 id="targetNameDisplay" class="text-xl font-orbitron font-black text-white truncate">BUSCANDO...</h3>
+            <p class="text-[11px] font-mono text-gray-400 mt-1 flex items-center gap-1">
+              <i class="fa-solid fa-satellite text-hud-cyan"></i> RASTREO SATELITAL ACTIVO
+            </p>
+          </div>
+        </div>
+
+        <!-- TELEMETRY DISPLAY -->
+        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 font-mono text-center space-y-1">
+          <div class="text-[10px] text-gray-500 uppercase tracking-widest">Distancia Telemétrica GPS</div>
+          <div id="distanceMeter" class="text-4xl font-orbitron font-black text-hud-cyan tracking-tight">-- <span class="text-base text-gray-500">M</span></div>
+          <div id="targetGpsCoords" class="text-[10px] text-gray-400">LAT: --.---- | LNG: --.----</div>
+        </div>
+
+        <button onclick="launchTacticalCamera()" class="w-full bg-gradient-to-r from-hud-cyan to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-orbitron font-black py-4 rounded-xl transition active:scale-95 shadow-lg shadow-cyan-500/20 uppercase tracking-widest text-xs flex items-center justify-center gap-2">
+          <i class="fa-solid fa-expand text-base"></i> Abrir Visor Táctico (HUD)
+        </button>
+      </div>
+
+      <!-- GPS Status Box -->
+      <div class="cyber-card p-4 rounded-2xl space-y-2 font-mono text-xs">
+        <div class="flex justify-between items-center text-gray-400">
+          <span>TELEMETRÍA AGENTE:</span>
+          <span id="gpsFixBadge" class="text-emerald-400 font-bold">GPS LOCK</span>
+        </div>
+        <div id="myCoordsReadout" class="text-[11px] text-hud-cyan bg-slate-950 p-2 rounded-lg border border-slate-800">
+          LAT: 0.0000 | LNG: 0.0000
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: PURE TACTICAL / MILITARY HUD CAMERA OVERLAY -->
+    <section id="viewCamera" class="hidden fixed inset-0 bg-black z-50 flex flex-col justify-between overflow-hidden select-none">
+      
+      <!-- Video Element -->
+      <div class="relative w-full h-full bg-slate-950 flex items-center justify-center">
+        <video id="hudCameraPreview" autoplay playsinline muted class="w-full h-full object-cover"></video>
+
+        <!-- SCANLINES OVERLAY -->
+        <div class="absolute inset-0 scanlines pointer-events-none"></div>
+
+        <!-- HUD TACTICAL OVERLAY LAYERS -->
+        <div class="absolute inset-0 pointer-events-none p-4 flex flex-col justify-between">
+          
+          <!-- TOP HUD BAR -->
+          <div class="flex justify-between items-start font-mono">
+            <!-- Left Corner: Telemetry & Rec status -->
+            <div class="bg-slate-950/80 border border-hud-cyan/40 p-2.5 rounded-lg text-[10px] space-y-1 backdrop-blur-md">
+              <div class="flex items-center gap-2 text-hud-red font-bold">
+                <span id="hudRecDot" class="w-2.5 h-2.5 rounded-full bg-hud-red animate-ping"></span>
+                <span id="hudRecText" class="tracking-widest">LIVE FEED // REC</span>
+              </div>
+              <div id="hudTimer" class="text-white font-black text-xs">00:00:00</div>
+              <div class="text-gray-400 text-[9px]" id="hudGpsRealtime">LAT: 36.7213 N | LNG: 4.4214 W</div>
+            </div>
+
+            <!-- Right Corner: Target Lock Indicator -->
+            <div class="bg-slate-950/80 border border-hud-cyan/40 p-2.5 rounded-lg text-right font-mono text-[10px] space-y-1 backdrop-blur-md">
+              <div class="text-hud-cyan font-bold tracking-wider">ESTADO: VISIÓN ACTIVA</div>
+              <div id="hudLockStatus" class="bg-hud-red/20 text-hud-red border border-hud-red/40 px-2 py-0.5 rounded font-black text-[9px] tracking-widest inline-block">
+                TARGET LOCKED
+              </div>
+              <div class="text-gray-400 text-[9px]" id="hudFpsCounter">FPS: 60 // OPTICAL 1.0X</div>
+            </div>
+          </div>
+
+          <!-- MILITARY CORNER FRAMES (HUD FRAMING CORNERS) -->
+          <div class="absolute corner-tl w-8 h-8"></div>
+          <div class="absolute corner-tr w-8 h-8"></div>
+          <div class="absolute corner-bl w-8 h-8"></div>
+          <div class="absolute corner-br w-8 h-8"></div>
+
+          <!-- CENTER TACTICAL SCANNING RETICLE / MIRILLA CENTRAL MILITAR -->
+          <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <div class="relative w-64 h-64 border border-hud-cyan/20 rounded-full flex items-center justify-center reticle-pulse">
+              
+              <!-- Outer rotating crosshairs -->
+              <div class="absolute inset-2 border border-dashed border-hud-cyan/40 rounded-full"></div>
+              
+              <!-- Center Lock Square -->
+              <div class="w-20 h-20 border-2 border-hud-red flex items-center justify-center relative">
+                <div class="w-2 h-2 bg-hud-red rounded-full"></div>
+                <span class="absolute -top-5 text-[9px] font-mono font-bold text-hud-red tracking-widest">AMN-LOCK</span>
+              </div>
+
+              <!-- Crosshair Lines -->
+              <div class="absolute w-full h-[1px] bg-hud-cyan/40"></div>
+              <div class="absolute h-full w-[1px] bg-hud-cyan/40"></div>
+            </div>
+          </div>
+
+          <!-- BOTTOM HUD TELEMETRY & CONFIRMATION BAR -->
+          <div class="flex justify-between items-end font-mono z-10">
+            <div class="bg-slate-950/80 border border-hud-cyan/40 p-2.5 rounded-lg text-[10px] max-w-[200px] backdrop-blur-md">
+              <span class="text-hud-cyan font-bold block">OBJETIVO EN VISIÓN:</span>
+              <span id="hudTargetNameText" class="text-white font-black text-xs uppercase truncate block">----</span>
+              <span id="hudDistanceText" class="text-amber-400 text-[10px]">RANGO: -- M</span>
+            </div>
+
+            <div class="flex items-center gap-3 pointer-events-auto">
+              <button onclick="abortTacticalCamera()" class="bg-slate-900 border border-gray-700 text-gray-300 w-12 h-12 rounded-xl flex items-center justify-center text-lg active:scale-90 transition">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+
+              <!-- CONFIRM DISCHARGE / BAJA BUTTON -->
+              <button id="btnTriggerDischarge" onclick="triggerTacticalRecord()" class="bg-gradient-to-r from-hud-red to-rose-700 border border-red-400 text-white font-orbitron font-black px-5 py-3.5 rounded-xl shadow-lg shadow-red-600/40 flex items-center gap-2 text-xs uppercase tracking-widest active:scale-95 transition">
+                <i class="fa-solid fa-crosshairs text-base"></i> CONFIRMAR BAJA
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full bg-slate-950/90 border-t border-slate-900 py-2.5 px-4 text-center font-mono text-[9px] text-gray-600">
+    SICARIO ROYALE P2P // MÓDULO DE MISIONES
+  </footer>
+
+  <script>
+    // System State Storage
+    let appState = {
+      role: null, // 'gm' or 'player'
+      agentName: '',
+      roomCode: '',
+      myCoords: { lat: 36.7213, lng: -4.4214 },
+      targetAgent: null,
+      players: [],
+      peer: null,
+      peerConnections: [],
+      hostConn: null,
+      mediaRecorder: null,
+      recordedChunks: [],
+      cameraStream: null,
+      isRecording: false,
+      recTimerInterval: null,
+      recSeconds: 0
+    };
+
+    // UI Toast System
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const box = document.getElementById('toastBox');
+      const txt = document.getElementById('toastMessage');
+      const icon = document.getElementById('toastIcon');
+
+      txt.textContent = msg;
+      if (type === 'error') {
+        icon.className = 'fa-solid fa-triangle-exclamation text-hud-red text-base';
+        box.className = 'bg-slate-900 border border-hud-red text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 pointer-events-auto max-w-md w-full font-mono text-xs';
+      } else if (type === 'success') {
+        icon.className = 'fa-solid fa-circle-check text-emerald-400 text-base';
+        box.className = 'bg-slate-900 border border-emerald-500 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 pointer-events-auto max-w-md w-full font-mono text-xs';
+      } else {
+        icon.className = 'fa-solid fa-circle-info text-hud-cyan text-base';
+        box.className = 'bg-slate-900 border border-hud-cyan text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-3 pointer-events-auto max-w-md w-full font-mono text-xs';
+      }
+
+      container.classList.remove('-translate-y-12', 'opacity-0');
+      setTimeout(() => { hideToast(); }, 3500);
+    }
+
+    function hideToast() {
+      document.getElementById('toastContainer').classList.add('-translate-y-12', 'opacity-0');
+    }
+
+    // View Switching Logic
+    function showView(viewId) {
+      ['viewLobby', 'viewWaiting', 'viewGame', 'viewCamera'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(viewId).classList.remove('hidden');
+    }
+
+    // PeerJS Peer Initialization
+    function setupPeer(customId = null) {
+      return new Promise((resolve) => {
+        appState.peer = customId ? new Peer(customId) : new Peer();
+        
+        appState.peer.on('open', (id) => {
+          document.getElementById('netStatusBadge').className = 'bg-slate-900 border border-emerald-500/40 px-3 py-1 rounded-md text-[10px] font-mono font-bold text-emerald-400 flex items-center gap-2';
+          document.getElementById('netStatusText').textContent = 'P2P EN VIVO';
+          resolve(id);
+        });
+
+        appState.peer.on('error', (err) => {
+          console.warn('Peer error:', err);
+          showToast('Error de red P2P: ' + err.type, 'error');
+        });
+      });
+    }
+
+    // 1. Create Lobby Session (GameMaster)
+    async function createLobbySession() {
+      const name = document.getElementById('inputAgentName').value.trim();
+      if (!name) return showToast('Escribe tu nombre/clave de Agente.', 'error');
+
+      appState.agentName = name;
+      appState.role = 'gm';
+      appState.roomCode = 'SICA-' + Math.floor(100 + Math.random() * 900);
+
+      await setupPeer(appState.roomCode);
+
+      document.getElementById('displayRoomCode').textContent = appState.roomCode;
+      document.getElementById('gmControls').classList.remove('hidden');
+      showView('viewWaiting');
+
+      // Add self to GM player list
+      appState.players = [{ id: appState.peer.id, name: appState.agentName + ' (GM)', lat: appState.myCoords.lat, lng: appState.myCoords.lng }];
+      renderWaitingPlayers();
+
+      // Listen for incoming P2P joining connections
+      appState.peer.on('connection', (conn) => {
+        appState.peerConnections.push(conn);
+        conn.on('data', (data) => handleGMIncomingData(data, conn));
+      });
+
+      initGPSTracking();
+      showToast('Frecuencia ' + appState.roomCode + ' establecida.', 'success');
+    }
+
+    // 2. Join Lobby Session (Player Agent)
+    async function joinLobbySession() {
+      const name = document.getElementById('inputAgentName').value.trim();
+      const code = document.getElementById('inputRoomCode').value.trim().toUpperCase();
+
+      if (!name) return showToast('Escribe tu nombre de Agente.', 'error');
+      if (!code) return showToast('Escribe el Código de Frecuencia.', 'error');
+
+      appState.agentName = name;
+      appState.roomCode = code;
+      appState.role = 'player';
+
+      await setupPeer();
+
+      appState.hostConn = appState.peer.connect(appState.roomCode);
+
+      appState.hostConn.on('open', () => {
+        appState.hostConn.send({ type: 'JOIN', name: appState.agentName, id: appState.peer.id });
+        showView('viewWaiting');
+        document.getElementById('displayRoomCode').textContent = appState.roomCode;
+        initGPSTracking();
+        showToast('Enlazado exitosamente a la Frecuencia ' + code, 'success');
+      });
+
+      appState.hostConn.on('data', (data) => handlePlayerIncomingData(data));
+    }
+
+    // Network Handlers
+    function handleGMIncomingData(data, conn) {
+      if (data.type === 'JOIN') {
+        appState.players.push({ id: data.id, name: data.name, lat: 0, lng: 0 });
+        broadcastPlayerList();
+      } else if (data.type === 'GPS') {
+        const p = appState.players.find(x => x.id === data.id);
+        if (p) { p.lat = data.lat; p.lng = data.lng; }
+        calculateAndBroadcastTargets();
+      }
+    }
+
+    function handlePlayerIncomingData(data) {
+      if (data.type === 'PLAYER_LIST') {
+        appState.players = data.list;
+        renderWaitingPlayers();
+      } else if (data.type === 'TARGET_UPDATE') {
+        appState.targetAgent = data.target;
+        updateTargetHudDisplay(data.target, data.distance);
+      }
+    }
+
+    function broadcastPlayerList() {
+      renderWaitingPlayers();
+      appState.peerConnections.forEach(c => c.send({ type: 'PLAYER_LIST', list: appState.players }));
+    }
+
+    function renderWaitingPlayers() {
+      const el = document.getElementById('playerList');
+      document.getElementById('countPlayers').textContent = appState.players.length;
+      el.innerHTML = appState.players.map(p => `
+        <div class="flex justify-between items-center py-1 border-b border-slate-900">
+          <span class="font-bold text-white"><i class="fa-solid fa-user-shield text-hud-cyan mr-1.5"></i>${p.name}</span>
+          <span class="text-[9px] text-emerald-400">EN LINEA</span>
+        </div>
+      `).join('');
+    }
+
+    // Deploy Operation & Target Loop
+    function deployOperation() {
+      if (appState.players.length < 2) {
+        showToast('Se requieren al menos 2 agentes para iniciar la cacería.', 'error');
+        return;
+      }
+      calculateAndBroadcastTargets();
+      showView('viewGame');
+      showToast('¡Cacería Desplegada! Revisa tu objetivo.', 'success');
+    }
+
+    function calculateAndBroadcastTargets() {
+      if (appState.players.length < 2) return;
+
+      for (let i = 0; i < appState.players.length; i++) {
+        const hunter = appState.players[i];
+        const target = appState.players[(i + 1) % appState.players.length];
+        const dist = haversineDistance(hunter.lat, hunter.lng, target.lat, target.lng);
+
+        if (hunter.id === appState.peer.id) {
+          appState.targetAgent = target;
+          updateTargetHudDisplay(target, dist);
+        } else {
+          const conn = appState.peerConnections.find(c => c.peer === hunter.id);
+          if (conn) {
+            conn.send({ type: 'TARGET_UPDATE', target: { name: target.name, lat: target.lat, lng: target.lng }, distance: dist });
+          }
+        }
+      }
+    }
+
+    function updateTargetHudDisplay(target, distMeters) {
+      document.getElementById('targetNameDisplay').textContent = target.name;
+      document.getElementById('hudTargetNameText').textContent = target.name;
+      
+      const formattedDist = isNaN(distMeters) ? '--' : Math.round(distMeters);
+      document.getElementById('distanceMeter').innerHTML = `${formattedDist} <span class="text-base text-gray-500">M</span>`;
+      document.getElementById('hudDistanceText').textContent = `RANGO: ${formattedDist} M`;
+
+      if (target.lat && target.lng) {
+        document.getElementById('targetGpsCoords').textContent = `LAT: ${target.lat.toFixed(4)} | LNG: ${target.lng.toFixed(4)}`;
+      }
+    }
+
+    // Haversine Distance Formula
+    function haversineDistance(lat1, lon1, lat2, lon2) {
+      if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
+      const R = 6371e3;
+      const φ1 = lat1 * Math.PI / 180;
+      const φ2 = lat2 * Math.PI / 180;
+      const Δφ = (lat2 - lat1) * Math.PI / 180;
+      const Δλ = (lon2 - lon1) * Math.PI / 180;
+
+      const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    // GPS Telemetry
+    function initGPSTracking() {
+      if ('geolocation' in navigator) {
+        navigator.geolocation.watchPosition(
+          (pos) => {
+            appState.myCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            document.getElementById('myCoordsReadout').textContent = `LAT: ${appState.myCoords.lat.toFixed(4)} N | LNG: ${appState.myCoords.lng.toFixed(4)} W`;
+            document.getElementById('hudGpsRealtime').textContent = `LAT: ${appState.myCoords.lat.toFixed(4)} N | LNG: ${appState.myCoords.lng.toFixed(4)} W`;
+
+            if (appState.role === 'player' && appState.hostConn) {
+              appState.hostConn.send({ type: 'GPS', id: appState.peer.id, lat: appState.myCoords.lat, lng: appState.myCoords.lng });
+            } else if (appState.role === 'gm') {
+              const me = appState.players.find(p => p.id === appState.peer.id);
+              if (me) { me.lat = appState.myCoords.lat; me.lng = appState.myCoords.lng; }
+              calculateAndBroadcastTargets();
+            }
+          },
+          (err) => {
+            console.warn('GPS Error:', err);
+            document.getElementById('gpsFixBadge').textContent = 'GPS MAN';
+            document.getElementById('gpsFixBadge').className = 'text-amber-400 font-bold';
+          },
+          { enableHighAccuracy: true, maximumAge: 3000 }
+        );
+      }
+    }
+
+    // Tactical Video HUD & Camera Engine
+    async function launchTacticalCamera() {
+      showView('viewCamera');
+      try {
+        appState.cameraStream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' },
+          audio: true
+        });
+        document.getElementById('hudCameraPreview').srcObject = appState.cameraStream;
+      } catch (err) {
+        console.warn('Camera stream error:', err);
+        try {
+          appState.cameraStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          document.getElementById('hudCameraPreview').srcObject = appState.cameraStream;
+        } catch (e) {
+          showToast('No se pudo inicializar la cámara táctica.', 'error');
+        }
+      }
+    }
+
+    function abortTacticalCamera() {
+      if (appState.cameraStream) {
+        appState.cameraStream.getTracks().forEach(t => t.stop());
+      }
+      if (appState.isRecording) {
+        stopTacticalRecord();
+      }
+      showView('viewGame');
+    }
+
+    function triggerTacticalRecord() {
+      if (!appState.isRecording) {
+        startTacticalRecord();
+      } else {
+        stopTacticalRecord();
+      }
+    }
+
+    function startTacticalRecord() {
+      appState.recordedChunks = [];
+      try {
+        appState.mediaRecorder = new MediaRecorder(appState.cameraStream, { mimeType: 'video/webm' });
+      } catch (e) {
+        try {
+          appState.mediaRecorder = new MediaRecorder(appState.cameraStream);
+        } catch (err) {
+          showToast('Grabación no compatible en este dispositivo.', 'error');
+          return;
+        }
+      }
+
+      appState.mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) appState.recordedChunks.push(e.data);
+      };
+
+      appState.mediaRecorder.onstop = () => {
+        const blob = new Blob(appState.recordedChunks, { type: 'video/mp4' });
+        const videoUrl = URL.createObjectURL(blob);
+        
+        // Auto download evidence clip
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.href = videoUrl;
+        downloadAnchor.download = `BAJA_TACTICA_${Date.now()}.mp4`;
+        downloadAnchor.click();
+
+        showToast('¡Prueba táctica descargada en el dispositivo!', 'success');
+        abortTacticalCamera();
+      };
+
+      appState.mediaRecorder.start();
+      appState.isRecording = true;
+
+      // HUD UI Update for Recording State
+      document.getElementById('btnTriggerDischarge').classList.remove('from-hud-red', 'to-rose-700');
+      document.getElementById('btnTriggerDischarge').classList.add('from-amber-500', 'to-yellow-600');
+      document.getElementById('btnTriggerDischarge').innerHTML = `<i class="fa-solid fa-square text-base"></i> DETENER Y GUARDAR`;
+      document.getElementById('hudLockStatus').textContent = 'CONFIRMANDO BAJA';
+
+      // Start Recording Timer
+      appState.recSeconds = 0;
+      appState.recTimerInterval = setInterval(() => {
+        appState.recSeconds++;
+        const mins = String(Math.floor(appState.recSeconds / 60)).padStart(2, '0');
+        const secs = String(appState.recSeconds % 60).padStart(2, '0');
+        document.getElementById('hudTimer').textContent = `00:${mins}:${secs}`;
+      }, 1000);
+    }
+
+    function stopTacticalRecord() {
+      if (appState.mediaRecorder && appState.mediaRecorder.state === 'recording') {
+        appState.mediaRecorder.stop();
+      }
+      appState.isRecording = false;
+      clearInterval(appState.recTimerInterval);
+
+      // Reset Button State
+      document.getElementById('btnTriggerDischarge').classList.remove('from-amber-500', 'to-yellow-600');
+      document.getElementById('btnTriggerDischarge').classList.add('from-hud-red', 'to-rose-700');
+      document.getElementById('btnTriggerDischarge').innerHTML = `<i class="fa-solid fa-crosshairs text-base"></i> CONFIRMAR BAJA`;
+      document.getElementById('hudLockStatus').textContent = 'TARGET LOCKED';
+      document.getElementById('hudTimer').textContent = '00:00:00';
+    }
+  </script>
+</body>
+</html>
