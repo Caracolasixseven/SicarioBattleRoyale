@@ -22,50 +22,21 @@
     body {
       background-color: #0d1117;
       color: #e6edf3;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       touch-action: manipulation;
-    }
-    
-    /* Tactical HUD Overlay Elements */
-    .hud-corner {
-      position: absolute;
-      width: 24px;
-      height: 24px;
-      border-color: rgba(239, 68, 68, 0.8);
-      pointer-events: none;
-    }
-    .hud-tl { top: 20px; left: 20px; border-top: 3px solid; border-left: 3px solid; }
-    .hud-tr { top: 20px; right: 20px; border-top: 3px solid; border-right: 3px solid; }
-    .hud-bl { bottom: 90px; left: 20px; border-bottom: 3px solid; border-left: 3px solid; }
-    .hud-br { bottom: 90px; right: 20px; border-bottom: 3px solid; border-right: 3px solid; }
-
-    .tactical-grid {
-      background-image: linear-gradient(to right, rgba(255,255,255,0.03) 1px, transparent 1px),
-                        linear-gradient(to bottom, rgba(255,255,255,0.03) 1px, transparent 1px);
-      background-size: 20px 20px;
-    }
-
-    /* Reticle animation */
-    @keyframes pulse-ring {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.05); opacity: 0.4; }
-      100% { transform: scale(0.95); opacity: 0.8; }
-    }
-    .reticle-pulse {
-      animation: pulse-ring 3s infinite ease-in-out;
     }
   </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between p-4 max-w-md mx-auto tactical-grid">
+<body class="min-h-screen flex flex-col justify-between p-4 max-w-md mx-auto">
 
   <!-- HEADER -->
   <header class="flex justify-between items-center py-3 border-b border-gray-800">
     <div class="flex items-center space-x-2">
-      <i class="fa-solid fa-crosshairs text-red-600 text-2xl animate-spin-slow"></i>
-      <h1 class="font-black text-xl tracking-widest text-white">SICARIO<span class="text-red-600">.TAC</span></h1>
+      <i class="fa-solid fa-crosshairs text-red-500 text-xl"></i>
+      <h1 class="font-extrabold text-lg tracking-wider text-white">SICARIO<span class="text-red-500">ROYALE</span></h1>
     </div>
-    <div id="status-badge" class="px-2.5 py-1 text-[11px] rounded-sm bg-gray-900 text-gray-500 font-mono border border-gray-800 uppercase tracking-wider">
-      OFFLINE
+    <div id="status-badge" class="px-2 py-0.5 text-[10px] rounded-full bg-gray-800 text-gray-400 font-mono">
+      Offline
     </div>
   </header>
 
@@ -74,35 +45,35 @@
 
     <!-- VIEW 1: LOBBY SELECTION -->
     <section id="view-lobby" class="space-y-6">
-      <div class="text-center space-y-2">
-        <h2 class="text-xl font-bold tracking-wider text-red-500 uppercase">[ CACERÍA URBANA P2P ]</h2>
-        <p class="text-xs text-gray-400 font-sans">Sistema táctico de geolocalización y neutralización de objetivos.</p>
+      <div class="text-center space-y-1">
+        <h2 class="text-2xl font-bold">Cacería Urbana</h2>
+        <p class="text-xs text-gray-400">Juego GPS en tiempo real con captura en vídeo.</p>
       </div>
 
-      <div class="space-y-4 bg-gray-950/90 p-5 rounded-lg border border-gray-800 shadow-2xl">
+      <div class="space-y-4 bg-gray-900 p-5 rounded-2xl border border-gray-800 shadow-xl">
         <div>
-          <label class="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">> ID DE OPERATIVO (APODO)</label>
-          <input type="text" id="input-username" placeholder="Ej: FALCON_01" class="w-full bg-black border border-gray-800 rounded px-4 py-3 text-white focus:outline-none focus:border-red-600 font-mono uppercase text-sm">
+          <label class="block text-xs font-semibold text-gray-400 uppercase mb-1">Tu Nombre</label>
+          <input type="text" id="input-username" placeholder="Ej: Alex" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500">
         </div>
 
-        <div class="pt-2 border-t border-gray-900">
-          <button id="btn-create-room" onclick="createRoom()" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-3.5 rounded transition flex items-center justify-center space-x-2 text-xs uppercase tracking-widest shadow-lg shadow-red-950/50">
-            <i class="fa-solid fa-shield-halved"></i>
-            <span>CREAR SALA (GAME MASTER)</span>
+        <div class="pt-2 border-t border-gray-800">
+          <button onclick="createRoom()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg shadow-red-600/30 text-sm">
+            <i class="fa-solid fa-crown"></i>
+            <span>Crear Sala (Game Master)</span>
           </button>
         </div>
 
         <div class="relative flex py-1 items-center">
           <div class="flex-grow border-t border-gray-800"></div>
-          <span class="flex-shrink mx-4 text-[10px] text-gray-600 uppercase tracking-widest">O UNIRSE</span>
+          <span class="flex-shrink mx-4 text-xs text-gray-500 uppercase">o unirse</span>
           <div class="flex-grow border-t border-gray-800"></div>
         </div>
 
         <div class="space-y-2">
-          <input type="text" id="input-room-code" placeholder="CÓDIGO DE SALA (EJ: TAC-892)" class="w-full bg-black border border-gray-800 rounded px-4 py-3 text-white focus:outline-none focus:border-red-600 font-mono uppercase text-center tracking-widest text-sm">
-          <button id="btn-join-room" onclick="joinRoom()" class="w-full bg-gray-900 hover:bg-gray-800 text-white font-bold py-3.5 rounded transition flex items-center justify-center space-x-2 text-xs uppercase tracking-widest border border-gray-800">
-            <i class="fa-solid fa-satellite"></i>
-            <span>ENLAZAR A SALA</span>
+          <input type="text" id="input-room-code" placeholder="Código de Sala (Ej: SICA-492)" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 font-mono uppercase text-center tracking-widest text-sm">
+          <button onclick="joinRoom()" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center space-x-2 text-sm">
+            <i class="fa-solid fa-right-to-bracket"></i>
+            <span>Unirse a la Sala</span>
           </button>
         </div>
       </div>
@@ -110,146 +81,117 @@
 
     <!-- VIEW 2: WAITING ROOM -->
     <section id="view-waiting" class="hidden space-y-6 text-center">
-      <div class="bg-gray-950 p-6 rounded border border-gray-800 space-y-4">
-        <span class="text-[10px] text-gray-500 uppercase tracking-widest block">> CANAL TÁCTICO DE ENLACE</span>
-        <div id="display-room-code" class="text-3xl font-black text-red-600 font-mono tracking-widest">------</div>
-        <p class="text-[11px] text-gray-400 font-sans">Proporciona este código a los operativos de la escuadra.</p>
+      <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-4">
+        <span class="text-xs text-gray-400 uppercase tracking-widest block">Código de la Sala</span>
+        <div id="display-room-code" class="text-3xl font-black text-red-500 font-mono tracking-wider">------</div>
+        <p class="text-xs text-gray-400">Comparte este código con tus amigos.</p>
 
-        <div class="py-4">
-          <h3 class="text-xs font-bold text-left mb-2 text-gray-400 uppercase tracking-wider">> OPERATIVOS CONECTADOS:</h3>
-          <ul id="player-list" class="space-y-2 text-left font-mono">
+        <div class="py-2">
+          <h3 class="text-xs font-semibold text-left mb-2 text-gray-400 uppercase">Jugadores Conectados:</h3>
+          <ul id="player-list" class="space-y-2 text-left">
             <!-- Player items inserted dynamically -->
           </ul>
         </div>
 
-        <div id="gm-controls" class="hidden pt-4 border-t border-gray-900">
-          <button onclick="startGame()" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-3.5 rounded transition text-xs uppercase tracking-widest border border-red-500 shadow-lg shadow-red-950/80">
-            INICIAR MISIÓN TÁCTICA
+        <div id="gm-controls" class="hidden pt-4 border-t border-gray-800">
+          <button onclick="startGame()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-xl transition text-sm shadow-lg shadow-red-600/30">
+            Iniciar Partida
           </button>
         </div>
       </div>
     </section>
 
-    <!-- VIEW 3: ACTIVE GAME (HUNTER RADAR) -->
+    <!-- VIEW 3: ACTIVE GAME (MINIMALIST HUD LAYOUT) -->
     <section id="view-game" class="hidden space-y-4">
-      <div class="bg-gray-950/90 border border-gray-800 p-5 rounded space-y-4 text-center relative overflow-hidden">
-        <div class="flex justify-between items-center text-[10px] text-gray-500 border-b border-gray-900 pb-2">
-          <span>SYS.RADAR // V2.4</span>
-          <span class="text-green-500 animate-pulse">● EN VIVO</span>
-        </div>
-
-        <span class="text-[10px] font-bold text-red-500 uppercase tracking-widest block">> OBJETIVO ASIGNADO</span>
+      <div class="bg-gray-900 border border-gray-800 p-5 rounded-2xl space-y-5 text-center">
         
-        <div class="flex items-center justify-center space-x-3 py-2">
-          <i class="fa-solid fa-crosshairs text-3xl text-red-600 animate-pulse"></i>
-          <span id="target-name" class="text-2xl font-black tracking-widest text-white uppercase font-mono">BUSCANDO...</span>
-        </div>
-
-        <!-- RADAR DISTANCE DISPLAY -->
-        <div class="bg-black p-5 rounded border border-gray-900 relative">
-          <div class="text-[10px] text-gray-600 absolute top-2 left-2 uppercase">DIST.TELEMETRÍA</div>
-          <div id="radar-distance" class="text-5xl font-black font-mono text-white my-2">-- <span class="text-xl text-gray-600">M</span></div>
-          <div id="gps-accuracy" class="text-[10px] text-gray-500 font-mono">PRECISIÓN GPS: -- M</div>
-        </div>
-
-        <!-- CAPTURE TYPE SELECTOR & BUTTON -->
-        <div class="space-y-3 pt-2">
-          <div class="grid grid-cols-2 gap-2 text-xs font-mono">
-            <button id="mode-photo" onclick="setCaptureMode('photo')" class="py-2 bg-red-950 border border-red-600 text-white font-bold rounded text-[11px] uppercase tracking-wider">
-              <i class="fa-solid fa-camera mr-1"></i> FOTO
-            </button>
-            <button id="mode-video" onclick="setCaptureMode('video')" class="py-2 bg-gray-900 border border-gray-800 text-gray-400 font-bold rounded text-[11px] uppercase tracking-wider">
-              <i class="fa-solid fa-video mr-1"></i> VÍDEO
-            </button>
+        <!-- MINIMALIST LAYOUT: HUNTER (LEFT) | DISTANCE (CENTER) | TARGET (RIGHT) -->
+        <div class="flex justify-between items-center bg-gray-950 p-4 rounded-xl border border-gray-800/80">
+          
+          <!-- LEFT: HUNTER INFO -->
+          <div class="flex flex-col items-center space-y-1 w-1/3">
+            <div id="hunter-avatar" class="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-lg shadow-md">U</div>
+            <span id="hunter-name-display" class="text-xs font-bold text-gray-300 truncate max-w-[90px]">Tú</span>
+            <span class="text-[9px] text-gray-500 uppercase">Cazador</span>
           </div>
 
-          <button onclick="openCamera()" class="w-full bg-red-700 hover:bg-red-600 text-white font-bold py-4 rounded transition flex items-center justify-center space-x-2 text-sm uppercase tracking-widest shadow-lg shadow-red-950/60 border border-red-500">
-            <i class="fa-solid fa-expand text-lg"></i>
-            <span id="btn-capture-label">DESPLEGAR VISOR DE CAPTURA</span>
-          </button>
+          <!-- CENTER: DISTANCE -->
+          <div class="flex flex-col items-center justify-center w-1/3 border-x border-gray-800 px-2">
+            <span class="text-[9px] text-gray-500 uppercase tracking-wider mb-0.5">Distancia</span>
+            <div id="radar-distance" class="text-2xl font-black font-mono text-white">-- <span class="text-xs text-gray-500">m</span></div>
+          </div>
+
+          <!-- RIGHT: TARGET INFO -->
+          <div class="flex flex-col items-center space-y-1 w-1/3">
+            <div id="target-avatar" class="w-12 h-12 rounded-full bg-gray-800 border border-gray-700 text-red-500 flex items-center justify-center font-bold text-lg shadow-md">O</div>
+            <span id="target-name" class="text-xs font-bold text-white truncate max-w-[90px]">...</span>
+            <span class="text-[9px] text-red-500 uppercase font-semibold">Objetivo</span>
+          </div>
+
+        </div>
+
+        <div class="text-[11px] text-gray-400" id="gps-accuracy">
+          GPS: Calculando precisión...
+        </div>
+
+        <button onclick="openCamera()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl transition flex items-center justify-center space-x-2 text-sm shadow-lg shadow-red-600/40">
+          <i class="fa-solid fa-video"></i>
+          <span>Grabar Vídeo de Captura</span>
+        </button>
+      </div>
+
+      <!-- GM VIDEO GALLERY PANEL -->
+      <div id="gm-video-panel" class="hidden bg-gray-900 border border-gray-800 p-4 rounded-2xl space-y-3">
+        <h3 class="text-xs font-bold uppercase text-red-500 tracking-wider">Galería de Vídeos Recibidos (GM)</h3>
+        <div id="gm-video-list" class="space-y-3 max-h-60 overflow-y-auto pr-1">
+          <p class="text-xs text-gray-500 italic">Esperando vídeos de los cazadores...</p>
         </div>
       </div>
     </section>
 
-    <!-- VIEW 4: CAMERA CAPTURE WITH TACTICAL MILITARY HUD -->
+    <!-- VIEW 4: CAMERA CAPTURE -->
     <section id="view-camera" class="hidden fixed inset-0 bg-black z-50 flex flex-col justify-between">
-      
-      <!-- TOP HUD OVERLAY BAR -->
-      <div class="absolute top-0 inset-x-0 p-4 bg-gradient-to-b from-black/90 to-transparent z-20 flex justify-between items-start font-mono text-[10px]">
-        <div class="space-y-1">
-          <div class="text-red-500 font-bold flex items-center space-x-1">
-            <span class="w-2 h-2 rounded-full bg-red-600 animate-ping"></span>
-            <span id="hud-mode-indicator">REC // CAPTURA TÁCTICA</span>
-          </div>
-          <div class="text-gray-400">SYS: SICARIO_OS_v3</div>
-        </div>
-        <div class="text-right space-y-1">
-          <div id="hud-clock" class="text-white font-bold">00:00:00 UTC</div>
-          <div id="hud-coords" class="text-gray-400">GPS: --.-- , --.--</div>
-        </div>
-      </div>
-
-      <!-- CAMERA VIEWPORT WITH CORNER HUD FRAMING -->
-      <div class="relative flex-1 bg-black flex items-center justify-center overflow-hidden">
+      <div class="relative flex-1 bg-black flex items-center justify-center">
         <video id="camera-preview" autoplay playsinline muted class="w-full h-full object-cover"></video>
 
-        <!-- CANVAS FOR TAKING SNAPSHOTS -->
-        <canvas id="photo-canvas" class="hidden"></canvas>
-
-        <!-- HUD CORNER BRACKETS -->
-        <div class="hud-corner hud-tl"></div>
-        <div class="hud-corner hud-tr"></div>
-        <div class="hud-corner hud-bl"></div>
-        <div class="hud-corner hud-br"></div>
-
-        <!-- CENTER TACTICAL RETICLE -->
-        <div class="absolute pointer-events-none flex items-center justify-center">
-          <div class="w-32 h-32 border border-red-500/30 rounded-full flex items-center justify-center reticle-pulse">
-            <div class="w-16 h-16 border border-red-500/60 rounded-full flex items-center justify-center">
-              <div class="w-2 h-2 bg-red-600 rounded-full"></div>
-            </div>
-          </div>
-          <div class="absolute w-40 h-[1px] bg-red-500/20"></div>
-          <div class="absolute h-40 w-[1px] bg-red-500/20"></div>
-        </div>
-
-        <!-- TARGET OVERLAY DATA -->
-        <div class="absolute bottom-24 left-6 right-6 p-3 bg-black/70 border border-red-500/40 rounded backdrop-blur-sm pointer-events-none font-mono text-xs flex justify-between items-center">
-          <div>
-            <div class="text-[9px] text-gray-400 uppercase">OBJETIVO EN ENFOQUE</div>
-            <div id="hud-target-name" class="font-bold text-white uppercase text-sm">--</div>
-          </div>
-          <div class="text-right">
-            <div class="text-[9px] text-gray-400 uppercase">DISTANCIA</div>
-            <div id="hud-target-dist" class="font-bold text-red-500 text-sm">-- M</div>
-          </div>
+        <!-- RECORDING INDICATOR -->
+        <div class="absolute top-6 left-6 bg-black/60 px-3 py-1.5 rounded-full border border-red-500/30 flex items-center space-x-2">
+          <div class="w-2.5 h-2.5 bg-red-600 rounded-full animate-ping"></div>
+          <span class="text-xs font-mono text-white tracking-wider">GRABANDO</span>
         </div>
       </div>
 
-      <!-- BOTTOM CONTROL BAR -->
-      <div class="p-6 bg-black/95 border-t border-gray-900 flex justify-around items-center z-20">
-        <button onclick="closeCamera()" class="p-4 bg-gray-900 text-gray-300 rounded border border-gray-800">
-          <i class="fa-solid fa-xmark text-xl"></i>
+      <div class="p-6 bg-black/90 flex justify-around items-center">
+        <button onclick="closeCamera()" class="p-4 bg-gray-800 text-white rounded-full">
+          <i class="fa-solid fa-xmark text-lg"></i>
         </button>
-        
-        <button id="btn-trigger" onclick="handleTrigger()" class="p-5 bg-red-700 text-white rounded-full border-2 border-red-500 shadow-xl shadow-red-950/80">
-          <i id="trigger-icon" class="fa-solid fa-camera text-2xl"></i>
+        <button id="btn-record" onclick="toggleRecording()" class="p-5 bg-red-600 text-white rounded-full border-4 border-white shadow-xl">
+          <i class="fa-solid fa-circle text-xl"></i>
         </button>
+      </div>
+    </section>
+
+    <!-- VIEW 5: ELIMINATED / ROUND OVER -->
+    <section id="view-eliminated" class="hidden text-center space-y-4">
+      <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-3">
+        <i class="fa-solid fa-check-circle text-4xl text-green-500"></i>
+        <h2 class="text-xl font-bold text-white">¡Captura Registrada!</h2>
+        <p class="text-xs text-gray-400">Tu vídeo se ha descargado a tu dispositivo y ha sido enviado al Game Master.</p>
       </div>
     </section>
 
   </main>
 
   <!-- FOOTER -->
-  <footer class="text-center py-2 text-[10px] text-gray-700 font-mono">
-    SICARIO ROYALE &bull; ENLACE P2P DIRECTO WEBRTC
+  <footer class="text-center py-2 text-xs text-gray-600">
+    Sicario Royale P2P
   </footer>
 
   <!-- GAME LOGIC SCRIPT -->
   <script>
     let peer = null;
-    let connections = []; // GM stores connections to all players
-    let hostConn = null;  // Player connection to GM
+    let connections = []; 
+    let hostConn = null;  
     let isGM = false;
     let myId = '';
     let myUsername = '';
@@ -258,32 +200,30 @@
     let myCoords = { lat: 0, lng: 0, accuracy: 0 };
     let mediaRecorder = null;
     let recordedChunks = [];
-    let captureMode = 'photo'; // 'photo' or 'video'
-    let players = []; // All connected players
+    let players = []; 
 
-    // Initialize PeerJS
     function initPeer(customId = null) {
       return new Promise((resolve) => {
         peer = customId ? new Peer(customId) : new Peer();
         peer.on('open', (id) => {
           myId = id;
-          document.getElementById('status-badge').textContent = 'CONECTADO';
-          document.getElementById('status-badge').className = 'px-2.5 py-1 text-[11px] rounded-sm bg-green-950 text-green-400 font-mono border border-green-800 uppercase tracking-wider';
+          document.getElementById('status-badge').textContent = 'P2P Activo';
+          document.getElementById('status-badge').className = 'px-2 py-0.5 text-[10px] rounded-full bg-green-950 text-green-400 font-mono border border-green-800';
           resolve(id);
         });
       });
     }
 
-    // 1. Create Room (Game Master)
     async function createRoom() {
-      myUsername = document.getElementById('input-username').value.trim().toUpperCase() || 'GM_OPERATOR';
-      const roomCode = 'TAC-' + Math.floor(100 + Math.random() * 900);
+      myUsername = document.getElementById('input-username').value.trim() || 'GameMaster';
+      const roomCode = 'SICA-' + Math.floor(100 + Math.random() * 900);
       isGM = true;
 
       await initPeer(roomCode);
       
       document.getElementById('display-room-code').textContent = roomCode;
       document.getElementById('gm-controls').classList.remove('hidden');
+      document.getElementById('gm-video-panel').classList.remove('hidden');
       switchView('view-waiting');
 
       players = [{ id: myId, name: myUsername + ' (GM)', lat: 0, lng: 0 }];
@@ -297,9 +237,8 @@
       startGPS();
     }
 
-    // 2. Join Room (Player)
     async function joinRoom() {
-      myUsername = document.getElementById('input-username').value.trim().toUpperCase() || 'CAZADOR_' + Math.floor(Math.random()*100);
+      myUsername = document.getElementById('input-username').value.trim() || 'Cazador_' + Math.floor(Math.random()*100);
       const roomCode = document.getElementById('input-room-code').value.trim().toUpperCase();
 
       if(!roomCode) return alert('Introduce un código de sala válido.');
@@ -317,18 +256,17 @@
       hostConn.on('data', (data) => handlePlayerData(data));
     }
 
-    // 3. GM Message Handling & Coordinate Broadcasting
     function handleGMData(data, conn) {
       if(data.type === 'JOIN') {
         players.push({ id: data.id, name: data.name, lat: 0, lng: 0 });
         broadcastState();
       } else if(data.type === 'GPS_UPDATE') {
         const p = players.find(x => x.id === data.id);
-        if(p) { 
-          p.lat = data.lat; 
-          p.lng = data.lng; 
-        }
+        if(p) { p.lat = data.lat; p.lng = data.lng; }
         calculateAndBroadcastDistances();
+      } else if(data.type === 'VIDEO_SUBMISSION') {
+        const blob = new Blob([data.buffer], { type: 'video/mp4' });
+        addGMReceivedVideo(data.hunter, data.target, blob);
       }
     }
 
@@ -337,7 +275,6 @@
       connections.forEach(c => c.send({ type: 'PLAYER_LIST', list: players }));
     }
 
-    // Calculates ring assignments & sends targets + distances to EVERY player
     function calculateAndBroadcastDistances() {
       if(players.length < 2) return;
 
@@ -347,10 +284,8 @@
         const dist = haversine(hunter.lat, hunter.lng, target.lat, target.lng);
 
         if(hunter.id === myId) {
-          // If GM is also playing
           updateHunterDisplay(target.name, dist);
         } else {
-          // Send to remote player
           const conn = connections.find(c => c.peer === hunter.id);
           if(conn) {
             conn.send({ 
@@ -363,37 +298,41 @@
       }
     }
 
-    // 4. Player Message Handling
     function handlePlayerData(data) {
       if(data.type === 'PLAYER_LIST') {
         updatePlayerList(data.list);
+      } else if(data.type === 'START_GAME') {
+        switchView('view-game');
       } else if(data.type === 'TARGET_ASSIGNMENT') {
         updateHunterDisplay(data.target.name, data.distance);
-        switchView('view-game');
       }
     }
 
     function updateHunterDisplay(targetName, distance) {
       currentTarget = { name: targetName, dist: distance };
+      
+      // Update Hunter Info
+      document.getElementById('hunter-name-display').textContent = myUsername;
+      document.getElementById('hunter-avatar').textContent = myUsername.charAt(0).toUpperCase();
+
+      // Update Target Info
       document.getElementById('target-name').textContent = targetName;
-      document.getElementById('hud-target-name').textContent = targetName;
+      document.getElementById('target-avatar').textContent = targetName.charAt(0).toUpperCase();
       
       const distFormatted = isNaN(distance) || distance === 0 ? '--' : Math.round(distance);
-      document.getElementById('radar-distance').innerHTML = `${distFormatted} <span class="text-xl text-gray-600">M</span>`;
-      document.getElementById('hud-target-dist').textContent = `${distFormatted} M`;
+      document.getElementById('radar-distance').innerHTML = `${distFormatted} <span class="text-xs text-gray-500">m</span>`;
     }
 
     function updatePlayerList(list) {
       const ul = document.getElementById('player-list');
       ul.innerHTML = list.map(p => `
-        <li class="bg-black px-3 py-2 rounded text-xs flex justify-between items-center border border-gray-900">
-          <span class="text-gray-300"><i class="fa-solid fa-user-ninja text-red-600 mr-2"></i>${p.name}</span>
-          <span class="text-[10px] text-green-500">ACTIVO</span>
+        <li class="bg-gray-800 px-3 py-2 rounded-xl text-xs flex justify-between items-center">
+          <span><i class="fa-solid fa-user text-red-500 mr-2"></i>${p.name}</span>
+          <span class="text-[10px] text-green-400 font-mono">Conectado</span>
         </li>
       `).join('');
     }
 
-    // 5. GPS Tracking & Distance Calculation
     function startGPS() {
       if('geolocation' in navigator) {
         watchId = navigator.geolocation.watchPosition((pos) => {
@@ -401,15 +340,11 @@
           myCoords.lng = pos.coords.longitude;
           myCoords.accuracy = Math.round(pos.coords.accuracy);
 
-          document.getElementById('gps-accuracy').textContent = `PRECISIÓN GPS: ${myCoords.accuracy} M`;
-          document.getElementById('hud-coords').textContent = `GPS: ${myCoords.lat.toFixed(4)} , ${myCoords.lng.toFixed(4)}`;
+          document.getElementById('gps-accuracy').textContent = `Precisión GPS: ${myCoords.accuracy} m`;
 
           if(isGM) {
             const gmPlayer = players.find(p => p.id === myId);
-            if(gmPlayer) {
-              gmPlayer.lat = myCoords.lat;
-              gmPlayer.lng = myCoords.lng;
-            }
+            if(gmPlayer) { gmPlayer.lat = myCoords.lat; gmPlayer.lng = myCoords.lng; }
             calculateAndBroadcastDistances();
           } else if(hostConn) {
             hostConn.send({ type: 'GPS_UPDATE', id: myId, lat: myCoords.lat, lng: myCoords.lng });
@@ -427,36 +362,13 @@
       return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     }
 
-    // 6. Mode Selector (Photo vs Video)
-    function setCaptureMode(mode) {
-      captureMode = mode;
-      const btnPhoto = document.getElementById('mode-photo');
-      const btnVideo = document.getElementById('mode-video');
-      const triggerIcon = document.getElementById('trigger-icon');
-      const hudIndicator = document.getElementById('hud-mode-indicator');
-
-      if(mode === 'photo') {
-        btnPhoto.className = "py-2 bg-red-950 border border-red-600 text-white font-bold rounded text-[11px] uppercase tracking-wider";
-        btnVideo.className = "py-2 bg-gray-900 border border-gray-800 text-gray-400 font-bold rounded text-[11px] uppercase tracking-wider";
-        triggerIcon.className = "fa-solid fa-camera text-2xl";
-        hudIndicator.textContent = "PHOTO // CAPTURA DE PANTALLA TÁCTICA";
-      } else {
-        btnVideo.className = "py-2 bg-red-950 border border-red-600 text-white font-bold rounded text-[11px] uppercase tracking-wider";
-        btnPhoto.className = "py-2 bg-gray-900 border border-gray-800 text-gray-400 font-bold rounded text-[11px] uppercase tracking-wider";
-        triggerIcon.className = "fa-solid fa-circle text-2xl";
-        hudIndicator.textContent = "REC // REGISTRO DE VÍDEO TÁCTICO";
-      }
-    }
-
-    // 7. Camera & Capture Logic
     async function openCamera() {
       switchView('view-camera');
-      updateHUDClock();
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true });
         document.getElementById('camera-preview').srcObject = stream;
       } catch(e) {
-        alert('Error al acceder a la cámara o micrófono.');
+        alert('Error al acceder a la cámara.');
       }
     }
 
@@ -468,92 +380,78 @@
       switchView('view-game');
     }
 
-    function handleTrigger() {
-      if(captureMode === 'photo') {
-        takePhoto();
-      } else {
-        toggleRecording();
-      }
-    }
-
-    // Photo Capture Implementation
-    function takePhoto() {
-      const video = document.getElementById('camera-preview');
-      const canvas = document.getElementById('photo-canvas');
-      const ctx = canvas.getContext('2d');
-
-      canvas.width = video.videoWidth || 1280;
-      canvas.height = video.videoHeight || 720;
-
-      // Draw camera frame
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      // Draw Tactical Watermark / Overlay
-      ctx.fillStyle = "rgba(0, 0, 0, 0.6)";
-      ctx.fillRect(20, canvas.height - 80, 420, 60);
-
-      ctx.fillStyle = "#ef4444";
-      ctx.font = "bold 16px monospace";
-      ctx.fillText(`OBJETIVO: ${currentTarget ? currentTarget.name : 'DESCONOCIDO'}`, 35, canvas.height - 50);
-
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "12px monospace";
-      ctx.fillText(`SICARIO ROYALE TAC-HUD // DIST: ${currentTarget ? Math.round(currentTarget.dist) : '--'}M`, 35, canvas.height - 30);
-
-      // Save image
-      const imageURL = canvas.toDataURL("image/png");
-      const a = document.createElement('a');
-      a.href = imageURL;
-      a.download = `CAPTURA_SICARIO_${Date.now()}.png`;
-      a.click();
-
-      alert('¡Fotografía táctica guardada en tu galería!');
-      closeCamera();
-    }
-
-    // Video Capture Implementation
     function toggleRecording() {
-      const btn = document.getElementById('btn-trigger');
+      const btn = document.getElementById('btn-record');
       const video = document.getElementById('camera-preview');
 
       if(mediaRecorder && mediaRecorder.state === 'recording') {
         mediaRecorder.stop();
-        btn.classList.remove('bg-gray-700');
-        btn.classList.add('bg-red-700');
+        btn.classList.remove('bg-gray-400');
+        btn.classList.add('bg-red-600');
       } else {
         recordedChunks = [];
         mediaRecorder = new MediaRecorder(video.srcObject);
         mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
-        mediaRecorder.onstop = () => {
+        mediaRecorder.onstop = async () => {
           const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+
+          // 1. Download locally for the hunter (as implemented before)
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `VIDEO_SICARIO_${Date.now()}.mp4`;
+          a.download = `SicarioCapture_${Date.now()}.mp4`;
           a.click();
-          alert('¡Vídeo táctico guardado en tu galería!');
+
+          // 2. Send video directly to GM via P2P
+          const arrayBuffer = await blob.arrayBuffer();
+          const targetName = currentTarget ? currentTarget.name : 'OBJETIVO';
+
+          if(isGM) {
+            addGMReceivedVideo(myUsername, targetName, blob);
+          } else if(hostConn) {
+            hostConn.send({ 
+              type: 'VIDEO_SUBMISSION', 
+              hunter: myUsername, 
+              target: targetName, 
+              buffer: arrayBuffer 
+            });
+          }
+
           closeCamera();
+          switchView('view-eliminated');
         };
         mediaRecorder.start();
-        btn.classList.remove('bg-red-700');
-        btn.classList.add('bg-gray-700');
+        btn.classList.remove('bg-red-600');
+        btn.classList.add('bg-gray-400');
       }
     }
 
-    function updateHUDClock() {
-      setInterval(() => {
-        const now = new Date();
-        document.getElementById('hud-clock').textContent = now.toISOString().substring(11, 19) + ' UTC';
-      }, 1000);
+    function addGMReceivedVideo(hunterName, targetName, blob) {
+      const list = document.getElementById('gm-video-list');
+      if(list.querySelector('p')) list.innerHTML = ''; // Remove placeholder
+
+      const videoUrl = URL.createObjectURL(blob);
+      const item = document.createElement('div');
+      item.className = "bg-gray-950 p-3 rounded-xl border border-gray-800 space-y-2";
+      item.innerHTML = `
+        <div class="flex justify-between items-center text-xs">
+          <span class="font-bold text-white"><i class="fa-solid fa-crosshairs text-red-500 mr-1"></i> ${hunterName} ➔ ${targetName}</span>
+          <span class="text-[10px] text-gray-500 font-mono">${new Date().toLocaleTimeString()}</span>
+        </div>
+        <video controls src="${videoUrl}" class="w-full h-36 rounded-lg bg-black object-cover"></video>
+      `;
+      list.prepend(item);
     }
 
     function startGame() {
+      if(!isGM) return;
+      connections.forEach(c => c.send({ type: 'START_GAME' }));
       calculateAndBroadcastDistances();
       switchView('view-game');
     }
 
     function switchView(viewId) {
-      ['view-lobby', 'view-waiting', 'view-game', 'view-camera'].forEach(id => {
+      ['view-lobby', 'view-waiting', 'view-game', 'view-camera', 'view-eliminated'].forEach(id => {
         document.getElementById(id).classList.add('hidden');
       });
       document.getElementById(viewId).classList.remove('hidden');
