@@ -47,7 +47,7 @@
     <section id="view-lobby" class="space-y-6">
       <div class="text-center space-y-1">
         <h2 class="text-2xl font-bold">Cacería Urbana</h2>
-        <p class="text-xs text-gray-400">Juego GPS en tiempo real con captura en vídeo.</p>
+        <p class="text-xs text-gray-400">P2P Royale (Mínimo 3 Jugadores: 1 GM + 2 Cazadores)</p>
       </div>
 
       <div class="space-y-4 bg-gray-900 p-5 rounded-2xl border border-gray-800 shadow-xl">
@@ -82,7 +82,7 @@
           <input type="text" id="input-room-code" placeholder="Código de Sala (Ej: SICA-492)" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-red-500 font-mono uppercase text-center tracking-widest text-sm">
           <button onclick="joinRoom()" class="w-full bg-gray-800 hover:bg-gray-700 text-white font-bold py-3.5 rounded-xl transition flex items-center justify-center space-x-2 text-sm">
             <i class="fa-solid fa-right-to-bracket"></i>
-            <span>Unirse a la Sala</span>
+            <span>Unirse como Cazador</span>
           </button>
         </div>
       </div>
@@ -93,10 +93,13 @@
       <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-4">
         <span class="text-xs text-gray-400 uppercase tracking-widest block">Código de la Sala</span>
         <div id="display-room-code" class="text-3xl font-black text-red-500 font-mono tracking-wider">------</div>
-        <p class="text-xs text-gray-400">Comparte este código con tus amigos.</p>
+        <p class="text-xs text-gray-400">Comparte este código con al menos 2 amigos cazadores.</p>
 
         <div class="py-2">
-          <h3 class="text-xs font-semibold text-left mb-2 text-gray-400 uppercase">Jugadores Conectados:</h3>
+          <div class="flex justify-between items-center mb-2">
+            <h3 class="text-xs font-semibold text-gray-400 uppercase">Cazadores Conectados:</h3>
+            <span id="player-count-badge" class="text-xs font-bold text-red-500 font-mono">0 (Mín. 2)</span>
+          </div>
           <ul id="player-list" class="space-y-2 text-left">
             <!-- Player items inserted dynamically -->
           </ul>
@@ -105,7 +108,7 @@
         <!-- GM CONTROLS & TIMER CONFIG -->
         <div id="gm-controls" class="hidden pt-4 border-t border-gray-800 space-y-3">
           <div class="text-left">
-            <label class="block text-xs text-gray-400 mb-1">Tiempo Límite de Ronda (Minutos):</label>
+            <label class="block text-xs text-gray-400 mb-1">Tiempo Límite de Ronda:</label>
             <select id="select-timer" class="w-full bg-gray-800 border border-gray-700 rounded-xl px-3 py-2 text-white text-xs font-mono">
               <option value="2">2 Minutos</option>
               <option value="5" selected>5 Minutos</option>
@@ -114,22 +117,22 @@
             </select>
           </div>
 
-          <button onclick="startGame()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-xl transition text-sm shadow-lg shadow-red-600/30">
+          <button id="btn-start-game" onclick="startGame()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3.5 rounded-xl transition text-sm shadow-lg shadow-red-600/30 disabled:opacity-50 disabled:cursor-not-allowed">
             Iniciar Partida
           </button>
         </div>
       </div>
     </section>
 
-    <!-- VIEW 3: ACTIVE GAME (MINIMALIST HUD LAYOUT WITH TIMER) -->
-    <section id="view-game" class="hidden space-y-4">
+    <!-- VIEW 3A: ACTIVE GAME (HUNTER HUD) -->
+    <section id="view-game-hunter" class="hidden space-y-4">
 
       <!-- ROUND TIMER BANNER -->
       <div class="bg-gray-900 border border-gray-800 px-4 py-2.5 rounded-xl flex justify-between items-center">
         <span class="text-xs text-gray-400 font-semibold uppercase flex items-center">
           <i class="fa-solid fa-stopwatch text-red-500 mr-2"></i>Tiempo Restante:
         </span>
-        <span id="round-timer" class="font-mono text-lg font-black text-red-500">00:00</span>
+        <span id="round-timer-hunter" class="font-mono text-lg font-black text-red-500">00:00</span>
       </div>
 
       <div class="bg-gray-900 border border-gray-800 p-5 rounded-2xl space-y-5 text-center">
@@ -172,12 +175,31 @@
           <span>Grabar Vídeo de Captura</span>
         </button>
       </div>
+    </section>
 
-      <!-- GM VIDEO GALLERY PANEL -->
-      <div id="gm-video-panel" class="hidden bg-gray-900 border border-gray-800 p-4 rounded-2xl space-y-3">
-        <h3 class="text-xs font-bold uppercase text-red-500 tracking-wider">Galería de Vídeos Recibidos (GM)</h3>
-        <div id="gm-video-list" class="space-y-3 max-h-60 overflow-y-auto pr-1">
-          <p class="text-xs text-gray-500 italic">Esperando vídeos de los cazadores...</p>
+    <!-- VIEW 3B: GAME MASTER DASHBOARD (GM EXCLUSIVE) -->
+    <section id="view-game-gm" class="hidden space-y-4">
+      <div class="bg-gray-900 border border-gray-800 px-4 py-3 rounded-xl flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-shield-halved text-red-500"></i>
+          <span class="text-xs font-bold uppercase text-white">Panel Game Master</span>
+        </div>
+        <span id="round-timer-gm" class="font-mono text-lg font-black text-red-500">00:00</span>
+      </div>
+
+      <!-- LIVE HUNTER STATUS BOARD -->
+      <div class="bg-gray-900 border border-gray-800 p-4 rounded-2xl space-y-3">
+        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Estado de los Cazadores</h3>
+        <ul id="gm-status-list" class="space-y-2">
+          <!-- Status items populated dynamically -->
+        </ul>
+      </div>
+
+      <!-- GM RECEIVED VIDEOS GALLERY -->
+      <div class="bg-gray-900 border border-gray-800 p-4 rounded-2xl space-y-3">
+        <h3 class="text-xs font-bold uppercase text-red-500 tracking-wider">Vídeos Recibidos en Directo</h3>
+        <div id="gm-video-list" class="space-y-3 max-h-64 overflow-y-auto pr-1">
+          <p id="gm-no-videos-text" class="text-xs text-gray-500 italic">Esperando capturas en vídeo...</p>
         </div>
       </div>
     </section>
@@ -185,15 +207,12 @@
     <!-- VIEW 4: CAMERA CAPTURE WITH OVERLAY CANVAS -->
     <section id="view-camera" class="hidden fixed inset-0 bg-black z-50 flex flex-col justify-between">
       <div class="relative flex-1 bg-black flex items-center justify-center">
-        <!-- Hidden video source stream -->
         <video id="camera-preview" autoplay playsinline muted class="hidden"></video>
-        <!-- Canvas rendering camera + hud overlay -->
         <canvas id="camera-canvas" class="w-full h-full object-cover"></canvas>
 
-        <!-- RECORDING INDICATOR -->
         <div class="absolute top-6 left-6 bg-black/60 px-3 py-1.5 rounded-full border border-red-500/30 flex items-center space-x-2 pointer-events-none">
           <div class="w-2.5 h-2.5 bg-red-600 rounded-full animate-ping"></div>
-          <span class="text-xs font-mono text-white tracking-wider">GRABANDO HUD</span>
+          <span class="text-xs font-mono text-white tracking-wider">GRABANDO OVERLAY</span>
         </div>
       </div>
 
@@ -207,21 +226,39 @@
       </div>
     </section>
 
-    <!-- VIEW 5: ELIMINATED / CAPTURE SUCCESS -->
+    <!-- VIEW 5: ELIMINATED / CAPTURE SUCCESS & GM MEETING POINT -->
     <section id="view-eliminated" class="hidden text-center space-y-4">
-      <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-3">
-        <i class="fa-solid fa-check-circle text-4xl text-green-500"></i>
+      <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-4">
+        <i class="fa-solid fa-check-circle text-5xl text-green-500"></i>
         <h2 class="text-xl font-bold text-white">¡Captura Registrada!</h2>
-        <p class="text-xs text-gray-400">Tu vídeo con overlay se ha descargado a tu dispositivo y enviado al Game Master.</p>
+        <p class="text-xs text-gray-400">Tu vídeo se ha descargado y enviado al Game Master.</p>
+        
+        <!-- GM LOCATION REVEAL BOX -->
+        <div class="pt-3 border-t border-gray-800 text-left space-y-2">
+          <span class="text-xs font-bold text-red-500 uppercase tracking-wider block">📍 Punto de Encuentro (Game Master)</span>
+          <p class="text-xs text-gray-300">Dirígete a la ubicación del Game Master para revisar las grabaciones de la partida:</p>
+          <div id="gm-location-info" class="p-3 bg-gray-950 rounded-xl text-center font-mono text-xs text-white border border-gray-800">
+            Obteniendo coordenadas del GM...
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- VIEW 6: TIME EXPIRED -->
+    <!-- VIEW 6: TIME EXPIRED & GM MEETING POINT -->
     <section id="view-timeout" class="hidden text-center space-y-4">
-      <div class="bg-gray-900 p-6 rounded-2xl border border-red-900/50 space-y-3">
-        <i class="fa-solid fa-hourglass-end text-4xl text-red-500"></i>
+      <div class="bg-gray-900 p-6 rounded-2xl border border-red-900/50 space-y-4">
+        <i class="fa-solid fa-hourglass-end text-5xl text-red-500"></i>
         <h2 class="text-xl font-bold text-white">¡Tiempo Agotado!</h2>
-        <p class="text-xs text-gray-400">Ha finalizado el tiempo límite de la ronda sin completar la cacería.</p>
+        <p class="text-xs text-gray-400">Ha finalizado el tiempo límite de la ronda.</p>
+
+        <!-- GM LOCATION REVEAL BOX -->
+        <div class="pt-3 border-t border-gray-800 text-left space-y-2">
+          <span class="text-xs font-bold text-red-500 uppercase tracking-wider block">📍 Punto de Encuentro (Game Master)</span>
+          <p class="text-xs text-gray-300">Reúnete con el Game Master en sus coordenadas exactas:</p>
+          <div id="gm-location-info-timeout" class="p-3 bg-gray-950 rounded-xl text-center font-mono text-xs text-white border border-gray-800">
+            Obteniendo coordenadas del GM...
+          </div>
+        </div>
       </div>
     </section>
 
@@ -241,17 +278,20 @@
     let myId = '';
     let myUsername = '';
     let myAvatarBase64 = '';
-    let currentTarget = null; // { name, dist, avatar }
+    let currentTarget = null;
     let watchId = null;
     let myCoords = { lat: 0, lng: 0, accuracy: 0 };
     let mediaRecorder = null;
     let recordedChunks = [];
-    let players = []; 
+    let hunters = []; // List of hunters (excluding GM)
     let timerInterval = null;
     let roundSecondsRemaining = 300;
     let canvasAnimId = null;
 
-    // Handle avatar image selection preview
+    // Preloaded Image elements for Canvas Drawing (Avoids flicker)
+    let preloadedHunterImg = null;
+    let preloadedTargetImg = null;
+
     function previewAvatar(event) {
       const file = event.target.files[0];
       if(!file) return;
@@ -263,6 +303,10 @@
         img.src = myAvatarBase64;
         img.classList.remove('hidden');
         icon.classList.add('hidden');
+
+        // Preload self image
+        preloadedHunterImg = new Image();
+        preloadedHunterImg.src = myAvatarBase64;
       };
       reader.readAsDataURL(file);
     }
@@ -288,16 +332,12 @@
       
       document.getElementById('display-room-code').textContent = roomCode;
       document.getElementById('gm-controls').classList.remove('hidden');
-      document.getElementById('gm-video-panel').classList.remove('hidden');
       switchView('view-waiting');
-
-      players = [{ id: myId, name: myUsername + ' (GM)', avatar: myAvatarBase64, lat: 0, lng: 0 }];
-      updatePlayerList(players);
 
       peer.on('connection', (conn) => {
         connections.push(conn);
         conn.on('open', () => {
-          conn.send({ type: 'PLAYER_LIST', list: players });
+          conn.send({ type: 'HUNTER_LIST', list: hunters });
         });
         conn.on('data', (data) => handleGMData(data, conn));
       });
@@ -326,63 +366,82 @@
 
     function handleGMData(data, conn) {
       if(data.type === 'JOIN') {
-        players.push({ id: data.id, name: data.name, avatar: data.avatar, lat: 0, lng: 0 });
+        hunters.push({ id: data.id, name: data.name, avatar: data.avatar, lat: 0, lng: 0, eliminated: false });
         broadcastState();
       } else if(data.type === 'GPS_UPDATE') {
-        const p = players.find(x => x.id === data.id);
-        if(p) { p.lat = data.lat; p.lng = data.lng; }
+        const h = hunters.find(x => x.id === data.id);
+        if(h) { h.lat = data.lat; h.lng = data.lng; }
         calculateAndBroadcastDistances();
       } else if(data.type === 'VIDEO_SUBMISSION') {
-        const blob = new Blob([data.buffer], { type: 'video/mp4' });
+        const h = hunters.find(x => x.name === data.hunter);
+        if(h) h.eliminated = true;
+
+        const blob = new Blob([data.buffer], { type: 'video/webm' });
         addGMReceivedVideo(data.hunter, data.target, blob);
+        updateGMDashboard();
       }
     }
 
     function broadcastState() {
-      updatePlayerList(players);
+      updatePlayerList(hunters);
       connections.forEach(c => {
-        if(c.open) c.send({ type: 'PLAYER_LIST', list: players });
+        if(c.open) c.send({ type: 'HUNTER_LIST', list: hunters });
       });
+
+      const btnStart = document.getElementById('btn-start-game');
+      if(hunters.length >= 2) {
+        btnStart.disabled = false;
+        btnStart.innerText = "Iniciar Partida";
+      } else {
+        btnStart.disabled = true;
+        btnStart.innerText = "Esperando al menos 2 Cazadores...";
+      }
     }
 
     function calculateAndBroadcastDistances() {
-      if(players.length < 2) return;
+      if(hunters.length < 2) return;
 
-      for(let i = 0; i < players.length; i++) {
-        const hunter = players[i];
-        const target = players[(i + 1) % players.length];
+      for(let i = 0; i < hunters.length; i++) {
+        const hunter = hunters[i];
+        const target = hunters[(i + 1) % hunters.length];
         const dist = haversine(hunter.lat, hunter.lng, target.lat, target.lng);
 
-        if(hunter.id === myId) {
-          updateHunterDisplay(target, dist);
-        } else {
-          const conn = connections.find(c => c.peer === hunter.id);
-          if(conn && conn.open) {
-            conn.send({ 
-              type: 'TARGET_ASSIGNMENT', 
-              target: { name: target.name, avatar: target.avatar }, 
-              distance: dist 
-            });
-          }
+        const conn = connections.find(c => c.peer === hunter.id);
+        if(conn && conn.open) {
+          conn.send({ 
+            type: 'TARGET_ASSIGNMENT', 
+            target: { name: target.name, avatar: target.avatar }, 
+            distance: dist 
+          });
         }
       }
     }
 
     function handlePlayerData(data) {
-      if(data.type === 'PLAYER_LIST') {
+      if(data.type === 'HUNTER_LIST') {
         updatePlayerList(data.list);
       } else if(data.type === 'START_GAME') {
         roundSecondsRemaining = data.duration;
         startRoundTimer();
-        switchView('view-game');
+        switchView('view-game-hunter');
       } else if(data.type === 'TARGET_ASSIGNMENT') {
         updateHunterDisplay(data.target, data.distance);
+      } else if(data.type === 'GM_LOCATION_REVEAL') {
+        revealGMLocation(data.lat, data.lng);
       }
     }
 
     function updateHunterDisplay(target, distance) {
       currentTarget = { name: target.name, avatar: target.avatar, dist: distance };
       
+      // Preload target avatar image for flicker-free canvas drawing
+      if(target.avatar) {
+        preloadedTargetImg = new Image();
+        preloadedTargetImg.src = target.avatar;
+      } else {
+        preloadedTargetImg = null;
+      }
+
       // Update Hunter UI
       document.getElementById('hunter-name-display').textContent = myUsername;
       const hunterContainer = document.getElementById('hunter-avatar-container');
@@ -407,6 +466,7 @@
 
     function updatePlayerList(list) {
       const ul = document.getElementById('player-list');
+      document.getElementById('player-count-badge').textContent = `${list.length} (Mín. 2)`;
       ul.innerHTML = list.map(p => `
         <li class="bg-gray-800 px-3 py-2 rounded-xl text-xs flex justify-between items-center">
           <span class="flex items-center space-x-2">
@@ -415,9 +475,35 @@
             </div>
             <span>${p.name}</span>
           </span>
-          <span class="text-[10px] text-green-400 font-mono">Conectado</span>
+          <span class="text-[10px] text-green-400 font-mono">Cazador Conectado</span>
         </li>
       `).join('');
+    }
+
+    function updateGMDashboard() {
+      const ul = document.getElementById('gm-status-list');
+      if(!ul) return;
+      ul.innerHTML = hunters.map((h, i) => {
+        const target = hunters[(i + 1) % hunters.length];
+        return `
+          <li class="bg-gray-950 p-3 rounded-xl border border-gray-800 flex justify-between items-center text-xs">
+            <div class="flex items-center space-x-2">
+              <div class="w-7 h-7 rounded-full bg-gray-800 overflow-hidden flex items-center justify-center font-bold text-[10px]">
+                ${h.avatar ? `<img src="\${h.avatar}" class="w-full h-full object-cover">` : h.name.charAt(0)}
+              </div>
+              <div>
+                <div class="font-bold text-white">${h.name}</div>
+                <div class="text-[10px] text-gray-500">Objetivo: <span class="text-red-400 font-semibold">${target.name}</span></div>
+              </div>
+            </div>
+            <div>
+              ${h.eliminated ? 
+                `<span class="px-2 py-1 bg-green-950 text-green-400 border border-green-800 rounded-full text-[10px] font-mono">CAZADO ✓</span>` : 
+                `<span class="px-2 py-1 bg-red-950 text-red-400 border border-red-800 rounded-full text-[10px] font-mono">BUSCANDO...</span>`}
+            </div>
+          </li>
+        `;
+      }).join('');
     }
 
     function startGPS() {
@@ -427,14 +513,13 @@
           myCoords.lng = pos.coords.longitude;
           myCoords.accuracy = Math.round(pos.coords.accuracy);
 
-          document.getElementById('gps-accuracy').textContent = `Precisión GPS: ${myCoords.accuracy} m`;
+          const accuracyEl = document.getElementById('gps-accuracy');
+          if(accuracyEl) accuracyEl.textContent = `Precisión GPS: ${myCoords.accuracy} m`;
 
-          if(isGM) {
-            const gmPlayer = players.find(p => p.id === myId);
-            if(gmPlayer) { gmPlayer.lat = myCoords.lat; gmPlayer.lng = myCoords.lng; }
-            calculateAndBroadcastDistances();
-          } else if(hostConn && hostConn.open) {
+          if(!isGM && hostConn && hostConn.open) {
             hostConn.send({ type: 'GPS_UPDATE', id: myId, lat: myCoords.lat, lng: myCoords.lng });
+          } else if(isGM) {
+            calculateAndBroadcastDistances();
           }
         }, err => console.error(err), { enableHighAccuracy: true });
       }
@@ -463,23 +548,12 @@
       }
     }
 
-    // Helper to load image for Canvas drawing
-    function loadImage(src) {
-      return new Promise((resolve) => {
-        if(!src) { resolve(null); return; }
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = () => resolve(null);
-        img.src = src;
-      });
-    }
-
     function startCanvasOverlayLoop() {
       const video = document.getElementById('camera-preview');
       const canvas = document.getElementById('camera-canvas');
       const ctx = canvas.getContext('2d');
 
-      async function draw() {
+      function draw() {
         if(video.paused || video.ended) return;
 
         canvas.width = video.videoWidth || 1280;
@@ -502,14 +576,13 @@
         ctx.fill();
         ctx.stroke();
 
-        // 3. Draw Hunter Avatar & Info (Left)
-        const hunterImg = await loadImage(myAvatarBase64);
+        // 3. Draw Hunter Avatar & Info (Left) - Preloaded image avoids flicker
         ctx.save();
         ctx.beginPath();
         ctx.arc(boxX + 60, boxY + 45, 28, 0, 2 * Math.PI);
         ctx.clip();
-        if(hunterImg) {
-          ctx.drawImage(hunterImg, boxX + 32, boxY + 17, 56, 56);
+        if(preloadedHunterImg && preloadedHunterImg.complete) {
+          ctx.drawImage(preloadedHunterImg, boxX + 32, boxY + 17, 56, 56);
         } else {
           ctx.fillStyle = "#dc2626";
           ctx.fillRect(boxX + 32, boxY + 17, 56, 56);
@@ -538,28 +611,28 @@
         ctx.fillStyle = "#ffffff";
         ctx.fillText(distVal, boxX + boxWidth / 2, boxY + 74);
 
-        // 5. Draw Target Avatar & Info (Right)
+        // 5. Draw Target Avatar & Info (Right) - Preloaded image avoids flicker
         const targetName = currentTarget ? currentTarget.name : "???";
-        const targetAvatarSrc = currentTarget ? currentTarget.avatar : null;
-        const targetImg = await loadImage(targetAvatarSrc);
 
         ctx.save();
         ctx.beginPath();
         ctx.arc(boxX + boxWidth - 60, boxY + 45, 28, 0, 2 * Math.PI);
         ctx.clip();
-        if(targetImg) {
-          ctx.drawImage(targetImg, boxX + boxWidth - 88, boxY + 17, 56, 56);
+        if(preloadedTargetImg && preloadedTargetImg.complete) {
+          ctx.drawImage(preloadedTargetImg, boxX + boxWidth - 88, boxY + 17, 56, 56);
         } else {
           ctx.fillStyle = "#374151";
           ctx.fillRect(boxX + boxWidth - 88, boxY + 17, 56, 56);
           ctx.fillStyle = "#ef4444";
           ctx.font = "bold 24px sans-serif";
+          ctx.textAlign = "center";
           ctx.fillText(targetName.charAt(0).toUpperCase(), boxX + boxWidth - 60, boxY + 53);
         }
         ctx.restore();
 
         ctx.font = "bold 14px sans-serif";
         ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
         ctx.fillText(targetName, boxX + boxWidth - 60, boxY + 92);
         ctx.font = "10px sans-serif";
         ctx.fillStyle = "#ef4444";
@@ -577,7 +650,7 @@
       if(video.srcObject) {
         video.srcObject.getTracks().forEach(track => track.stop());
       }
-      switchView('view-game');
+      switchView('view-game-hunter');
     }
 
     function toggleRecording() {
@@ -600,7 +673,7 @@
           ...audioStream.getAudioTracks()
         ]);
 
-        mediaRecorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm;codecs=vp9' });
+        mediaRecorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm' });
         mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
         mediaRecorder.onstop = async () => {
           const blob = new Blob(recordedChunks, { type: 'video/webm' });
@@ -614,9 +687,7 @@
           const arrayBuffer = await blob.arrayBuffer();
           const targetName = currentTarget ? currentTarget.name : 'OBJETIVO';
 
-          if(isGM) {
-            addGMReceivedVideo(myUsername, targetName, blob);
-          } else if(hostConn && hostConn.open) {
+          if(hostConn && hostConn.open) {
             hostConn.send({ 
               type: 'VIDEO_SUBMISSION', 
               hunter: myUsername, 
@@ -637,7 +708,8 @@
 
     function addGMReceivedVideo(hunterName, targetName, blob) {
       const list = document.getElementById('gm-video-list');
-      if(list.querySelector('p')) list.innerHTML = '';
+      const noVidText = document.getElementById('gm-no-videos-text');
+      if(noVidText) noVidText.remove();
 
       const videoUrl = URL.createObjectURL(blob);
       const item = document.createElement('div');
@@ -654,25 +726,51 @@
 
     function startRoundTimer() {
       clearInterval(timerInterval);
-      const timerDisplay = document.getElementById('round-timer');
 
       timerInterval = setInterval(() => {
         roundSecondsRemaining--;
-        if(roundSecondsRemaining <= 0) {
-          clearInterval(timerInterval);
-          timerDisplay.textContent = "00:00";
-          switchView('view-timeout');
-          return;
-        }
-
+        
         const mins = Math.floor(roundSecondsRemaining / 60);
         const secs = roundSecondsRemaining % 60;
-        timerDisplay.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        const formatted = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+        const timerHunter = document.getElementById('round-timer-hunter');
+        const timerGM = document.getElementById('round-timer-gm');
+        if(timerHunter) timerHunter.textContent = formatted;
+        if(timerGM) timerGM.textContent = formatted;
+
+        if(roundSecondsRemaining <= 0) {
+          clearInterval(timerInterval);
+          if(isGM) broadcastGMLocationReveal();
+          switchView('view-timeout');
+        }
       }, 1000);
+    }
+
+    function broadcastGMLocationReveal() {
+      connections.forEach(c => {
+        if(c.open) c.send({ type: 'GM_LOCATION_REVEAL', lat: myCoords.lat, lng: myCoords.lng });
+      });
+    }
+
+    function revealGMLocation(lat, lng) {
+      const infoBox = document.getElementById('gm-location-info');
+      const infoBoxTimeout = document.getElementById('gm-location-info-timeout');
+
+      const content = `
+        <div>LAT: ${lat.toFixed(5)} | LNG: ${lng.toFixed(5)}</div>
+        <a href="https://maps.google.com/?q=${lat},${lng}" target="_blank" class="mt-2 inline-block px-4 py-2 bg-red-600 text-white font-bold rounded-lg text-xs">
+          <i class="fa-solid fa-map-location-dot mr-1"></i> Abrir en Google Maps
+        </a>
+      `;
+
+      if(infoBox) infoBox.innerHTML = content;
+      if(infoBoxTimeout) infoBoxTimeout.innerHTML = content;
     }
 
     function startGame() {
       if(!isGM) return;
+      if(hunters.length < 2) return alert('Se necesitan al menos 2 cazadores para iniciar la partida.');
 
       const durationMinutes = parseInt(document.getElementById('select-timer').value, 10) || 5;
       roundSecondsRemaining = durationMinutes * 60;
@@ -683,14 +781,17 @@
 
       startRoundTimer();
       calculateAndBroadcastDistances();
-      switchView('view-game');
+      updateGMDashboard();
+      switchView('view-game-gm');
     }
 
     function switchView(viewId) {
-      ['view-lobby', 'view-waiting', 'view-game', 'view-camera', 'view-eliminated', 'view-timeout'].forEach(id => {
-        document.getElementById(id).classList.add('hidden');
+      ['view-lobby', 'view-waiting', 'view-game-hunter', 'view-game-gm', 'view-camera', 'view-eliminated', 'view-timeout'].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.classList.add('hidden');
       });
-      document.getElementById(viewId).classList.remove('hidden');
+      const targetView = document.getElementById(viewId);
+      if(targetView) targetView.classList.remove('hidden');
     }
   </script>
 </body>
