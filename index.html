@@ -5,13 +5,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Sicario Royale P2P</title>
 
+  <!-- PWA & Mobile Settings -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0d1117">
 
+  <!-- Tailwind CSS & FontAwesome -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- PeerJS Library for P2P Networking -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
   <style>
@@ -25,6 +29,7 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between p-4 max-w-md mx-auto">
 
+  <!-- HEADER -->
   <header class="flex justify-between items-center py-3 border-b border-gray-800">
     <div class="flex items-center space-x-2">
       <i class="fa-solid fa-crosshairs text-red-500 text-xl"></i>
@@ -35,16 +40,19 @@
     </div>
   </header>
 
+  <!-- MAIN CONTAINER -->
   <main id="app" class="flex-1 my-4 flex flex-col justify-center">
 
-    <!-- VIEW 1: LOBBY -->
+    <!-- VIEW 1: LOBBY SELECTION -->
     <section id="view-lobby" class="space-y-6">
       <div class="text-center space-y-1">
         <h2 class="text-2xl font-bold">Cacería Urbana</h2>
-        <p class="text-xs text-gray-400">Battle Royale GPS (Mínimo 3 Jugadores: 1 GM + 2 Cazadores)</p>
+        <p class="text-xs text-gray-400">Battle Royale GPS (Bajo Consumo de Datos)</p>
       </div>
 
       <div class="space-y-4 bg-gray-900 p-5 rounded-2xl border border-gray-800 shadow-xl">
+        
+        <!-- USERNAME & AVATAR UPLOAD -->
         <div class="flex items-center space-x-4">
           <div class="relative w-16 h-16 rounded-full bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center shrink-0 cursor-pointer shadow-inner" onclick="document.getElementById('input-avatar-file').click()">
             <img id="avatar-preview-img" class="w-full h-full object-cover hidden" alt="Avatar">
@@ -85,7 +93,7 @@
       <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-4">
         <span class="text-xs text-gray-400 uppercase tracking-widest block">Código de la Sala</span>
         <div id="display-room-code" class="text-3xl font-black text-red-500 font-mono tracking-wider">------</div>
-        <p class="text-xs text-gray-400">IMPORTANTE (iPhone): Usad obligatoriamente <b>Safari</b>.</p>
+        <p class="text-xs text-gray-400">En iPhone usa Safari. Comparte el código.</p>
 
         <div class="py-2">
           <div class="flex justify-between items-center mb-2">
@@ -95,6 +103,7 @@
           <ul id="player-list" class="space-y-2 text-left"></ul>
         </div>
 
+        <!-- GM CONTROLS & TIMER CONFIG -->
         <div id="gm-controls" class="hidden pt-4 border-t border-gray-800 space-y-3">
           <div class="text-left">
             <label class="block text-xs text-gray-400 mb-1">Tiempo Límite de Ronda:</label>
@@ -147,7 +156,7 @@
         </div>
 
         <div class="text-[11px] text-gray-400" id="gps-accuracy">
-          GPS: Buscando señal satelital alta precisión...
+          GPS: Buscando señal de alta precisión...
         </div>
 
         <button id="btn-open-camera" onclick="openCamera()" disabled class="w-full bg-gray-800 text-gray-500 font-bold py-4 rounded-xl transition flex items-center justify-center space-x-2 text-sm shadow-lg cursor-not-allowed">
@@ -157,7 +166,7 @@
       </div>
     </section>
 
-    <!-- VIEW 3B: GM DASHBOARD -->
+    <!-- VIEW 3B: GAME MASTER DASHBOARD -->
     <section id="view-game-gm" class="hidden space-y-4">
       <div class="bg-gray-900 border border-gray-800 px-4 py-3 rounded-xl flex justify-between items-center">
         <div class="flex items-center space-x-2">
@@ -173,7 +182,7 @@
       </div>
 
       <div class="bg-gray-900 border border-gray-800 p-4 rounded-2xl space-y-3">
-        <h3 class="text-xs font-bold uppercase text-red-500 tracking-wider">Vídeos Recibidos en Directo</h3>
+        <h3 class="text-xs font-bold uppercase text-red-500 tracking-wider">Vídeos Recibidos en Directo (Con Overlay)</h3>
         <div id="gm-video-list" class="space-y-3 max-h-64 overflow-y-auto pr-1">
           <p id="gm-no-videos-text" class="text-xs text-gray-500 italic">Esperando capturas en vídeo...</p>
         </div>
@@ -273,27 +282,46 @@
     let preloadedHunterImg = null;
     let preloadedTargetImg = null;
 
+    // Comprimir avatar a 120x120 para reducir peso de red móvil
     function previewAvatar(event) {
       const file = event.target.files[0];
       if(!file) return;
       const reader = new FileReader();
       reader.onload = function(e) {
-        myAvatarBase64 = e.target.result;
-        const img = document.getElementById('avatar-preview-img');
-        const icon = document.getElementById('avatar-preview-icon');
-        img.src = myAvatarBase64;
-        img.classList.remove('hidden');
-        icon.classList.add('hidden');
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          const MAX_SIZE = 120;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+          } else {
+            if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          myAvatarBase64 = canvas.toDataURL('image/jpeg', 0.7);
+          
+          const previewImg = document.getElementById('avatar-preview-img');
+          const icon = document.getElementById('avatar-preview-icon');
+          previewImg.src = myAvatarBase64;
+          previewImg.classList.remove('hidden');
+          icon.classList.add('hidden');
 
-        preloadedHunterImg = new Image();
-        preloadedHunterImg.src = myAvatarBase64;
+          preloadedHunterImg = new Image();
+          preloadedHunterImg.src = myAvatarBase64;
+        };
+        img.src = e.target.result;
       };
       reader.readAsDataURL(file);
     }
 
     function initPeer(customId = null) {
       return new Promise((resolve) => {
-        // Configuración de servidores STUN públicos de Google para conectar dispositivos en red móvil (Android/iPhone)
         const peerOptions = {
           config: {
             iceServers: [
@@ -314,7 +342,6 @@
 
         peer.on('error', (err) => {
           console.error("Peer error:", err);
-          alert("Error de conexión P2P en red móvil. Asegúrate de usar Safari si estás en iPhone.");
         });
       });
     }
@@ -347,12 +374,6 @@
 
       if(!roomCode) return alert('Introduce un código de sala válido.');
 
-      // Advertencia útil para usuarios de iPhone
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-      if (isIOS && !window.navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches) {
-        console.log("Usuario en iOS detectado");
-      }
-
       await initPeer();
       hostConn = peer.connect(roomCode, { reliable: true });
 
@@ -364,7 +385,7 @@
       });
 
       hostConn.on('error', (err) => {
-        alert("No se pudo conectar con la sala. Verifica el código o que el Game Master tenga la app abierta.");
+        alert("No se pudo conectar. En iPhone usa Safari y asegúrate de que el GM esté dentro.");
       });
 
       hostConn.on('data', (data) => handlePlayerData(data));
@@ -576,6 +597,7 @@
       }).join('');
     }
 
+    // Configuración GPS optimizada para bajo consumo de batería y datos en red móvil
     function startGPS() {
       if('geolocation' in navigator) {
         watchId = navigator.geolocation.watchPosition((pos) => {
@@ -584,14 +606,14 @@
           myCoords.accuracy = Math.round(pos.coords.accuracy);
 
           const accuracyEl = document.getElementById('gps-accuracy');
-          if(accuracyEl) accuracyEl.textContent = `Precisión GPS: ${myCoords.accuracy} m (Alta)`;
+          if(accuracyEl) accuracyEl.textContent = `Precisión GPS: ${myCoords.accuracy} m`;
 
           if(!isGM && hostConn && hostConn.open) {
             hostConn.send({ type: 'GPS_UPDATE', id: myId, lat: myCoords.lat, lng: myCoords.lng });
           } else if(isGM) {
             calculateAndBroadcastTargets();
           }
-        }, err => console.error(err), { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
+        }, err => console.error(err), { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 });
       }
     }
 
@@ -605,15 +627,29 @@
     }
 
     async function openCamera() {
+      if (myAvatarBase64 && (!preloadedHunterImg || !preloadedHunterImg.complete)) {
+        preloadedHunterImg = new Image();
+        preloadedHunterImg.src = myAvatarBase64;
+        await new Promise(r => preloadedHunterImg.onload = r);
+      }
+      if (currentTarget && currentTarget.avatar && (!preloadedTargetImg || !preloadedTargetImg.complete)) {
+        preloadedTargetImg = new Image();
+        preloadedTargetImg.src = currentTarget.avatar;
+        await new Promise(r => preloadedTargetImg.onload = r);
+      }
+
       switchView('view-camera');
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: { facingMode: 'environment', width: { ideal: 640 }, height: { ideal: 360 } }, 
+          audio: true 
+        });
         const video = document.getElementById('camera-preview');
         video.srcObject = stream;
         await video.play();
         startCanvasOverlayLoop();
       } catch(e) {
-        alert('Error al acceder a la cámara. Revisa los permisos.');
+        alert('Error al acceder a la cámara.');
       }
     }
 
@@ -625,82 +661,79 @@
       function draw() {
         if(video.paused || video.ended) return;
 
-        canvas.width = video.videoWidth || 1280;
-        canvas.height = video.videoHeight || 720;
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 360;
 
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
         const boxWidth = canvas.width * 0.9;
-        const boxHeight = 110;
+        const boxHeight = 90;
         const boxX = (canvas.width - boxWidth) / 2;
-        const boxY = canvas.height - boxHeight - 30;
+        const boxY = canvas.height - boxHeight - 20;
 
         ctx.fillStyle = "rgba(13, 17, 23, 0.85)";
         ctx.strokeStyle = "rgba(239, 68, 68, 0.6)";
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 16);
+        ctx.roundRect(boxX, boxY, boxWidth, boxHeight, 12);
         ctx.fill();
         ctx.stroke();
 
+        // Hunter Info
         ctx.save();
         ctx.beginPath();
-        ctx.arc(boxX + 60, boxY + 45, 28, 0, 2 * Math.PI);
+        ctx.arc(boxX + 45, boxY + 45, 22, 0, 2 * Math.PI);
         ctx.clip();
-        if(preloadedHunterImg && preloadedHunterImg.complete) {
-          ctx.drawImage(preloadedHunterImg, boxX + 32, boxY + 17, 56, 56);
+        if(preloadedHunterImg && preloadedHunterImg.complete && preloadedHunterImg.naturalWidth !== 0) {
+          ctx.drawImage(preloadedHunterImg, boxX + 23, boxY + 23, 44, 44);
         } else {
           ctx.fillStyle = "#dc2626";
-          ctx.fillRect(boxX + 32, boxY + 17, 56, 56);
+          ctx.fillRect(boxX + 23, boxY + 23, 44, 44);
           ctx.fillStyle = "#ffffff";
-          ctx.font = "bold 24px sans-serif";
+          ctx.font = "bold 18px sans-serif";
           ctx.textAlign = "center";
-          ctx.fillText(myUsername.charAt(0).toUpperCase(), boxX + 60, boxY + 53);
+          ctx.fillText(myUsername.charAt(0).toUpperCase(), boxX + 45, boxY + 51);
         }
         ctx.restore();
 
-        ctx.font = "bold 14px sans-serif";
+        ctx.font = "bold 12px sans-serif";
         ctx.fillStyle = "#e6edf3";
         ctx.textAlign = "center";
-        ctx.fillText(myUsername, boxX + 60, boxY + 92);
-        ctx.font = "10px sans-serif";
-        ctx.fillStyle = "#9ca3af";
-        ctx.fillText("CAZADOR", boxX + 60, boxY + 104);
+        ctx.fillText(myUsername, boxX + 45, boxY + 76);
 
+        // Distance
         const distVal = currentTarget && !isNaN(currentTarget.dist) ? Math.round(currentTarget.dist) + " m" : "-- m";
-        ctx.font = "10px sans-serif";
+        ctx.font = "9px sans-serif";
         ctx.fillStyle = "#9ca3af";
-        ctx.fillText("DISTANCIA", boxX + boxWidth / 2, boxY + 38);
+        ctx.fillText("DISTANCIA", boxX + boxWidth / 2, boxY + 32);
 
-        ctx.font = "bold 28px monospace";
+        ctx.font = "bold 22px monospace";
         ctx.fillStyle = "#ffffff";
-        ctx.fillText(distVal, boxX + boxWidth / 2, boxY + 74);
+        ctx.fillText(distVal, boxX + boxWidth / 2, boxY + 62);
 
+        // Target Info
         const targetName = currentTarget ? currentTarget.name : "???";
 
         ctx.save();
         ctx.beginPath();
-        ctx.arc(boxX + boxWidth - 60, boxY + 45, 28, 0, 2 * Math.PI);
+        ctx.arc(boxX + boxWidth - 45, boxY + 45, 22, 0, 2 * Math.PI);
         ctx.clip();
-        if(preloadedTargetImg && preloadedTargetImg.complete) {
-          ctx.drawImage(preloadedTargetImg, boxX + boxWidth - 88, boxY + 17, 56, 56);
+        if(preloadedTargetImg && preloadedTargetImg.complete && preloadedTargetImg.naturalWidth !== 0) {
+          ctx.drawImage(preloadedTargetImg, boxX + boxWidth - 67, boxY + 23, 44, 44);
         } else {
           ctx.fillStyle = "#374151";
-          ctx.fillRect(boxX + boxWidth - 88, boxY + 17, 56, 56);
+          ctx.fillRect(boxX + boxWidth - 67, boxY + 23, 44, 44);
           ctx.fillStyle = "#ef4444";
-          ctx.font = "bold 24px sans-serif";
+          ctx.font = "bold 18px sans-serif";
           ctx.textAlign = "center";
-          ctx.fillText(targetName.charAt(0).toUpperCase(), boxX + boxWidth - 60, boxY + 53);
+          ctx.fillText(targetName.charAt(0).toUpperCase(), boxX + boxWidth - 45, boxY + 51);
         }
         ctx.restore();
 
-        ctx.font = "bold 14px sans-serif";
+        ctx.font = "bold 12px sans-serif";
         ctx.fillStyle = "#ffffff";
         ctx.textAlign = "center";
-        ctx.fillText(targetName, boxX + boxWidth - 60, boxY + 92);
-        ctx.font = "10px sans-serif";
-        ctx.fillStyle = "#ef4444";
-        ctx.fillText("OBJETIVO", boxX + boxWidth - 60, boxY + 104);
+        ctx.fillText(targetName, boxX + boxWidth - 45, boxY + 76);
 
         canvasAnimId = requestAnimationFrame(draw);
       }
@@ -729,7 +762,7 @@
       } else {
         recordedChunks = [];
         
-        const canvasStream = canvas.captureStream(30);
+        const canvasStream = canvas.captureStream(20); // 20 FPS optimizado
         const audioStream = video.srcObject;
         
         const combinedStream = new MediaStream([
@@ -737,7 +770,13 @@
           ...audioStream.getAudioTracks()
         ]);
 
-        mediaRecorder = new MediaRecorder(combinedStream, { mimeType: 'video/webm' });
+        let mime = 'video/webm;codecs=vp8,opus';
+        if (!MediaRecorder.isTypeSupported(mime)) {
+          mime = 'video/webm';
+        }
+
+        // Tasa de bits optimizada para enviar vídeos ligeros por red móvil (aprox 500kbps)
+        mediaRecorder = new MediaRecorder(combinedStream, { mimeType: mime, videoBitsPerSecond: 500000 });
         mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
         mediaRecorder.onstop = async () => {
           const blob = new Blob(recordedChunks, { type: 'video/webm' });
@@ -782,7 +821,7 @@
           <span class="font-bold text-white"><i class="fa-solid fa-crosshairs text-red-500 mr-1"></i> ${hunterName} cazó a ${targetName}</span>
           <span class="text-[10px] text-gray-500 font-mono">${new Date().toLocaleTimeString()}</span>
         </div>
-        <video controls src="${videoUrl}" class="w-full h-36 rounded-lg bg-black object-cover"></video>
+        <video controls playsinline src="${videoUrl}" class="w-full h-36 rounded-lg bg-black object-cover"></video>
       `;
       list.prepend(item);
     }
