@@ -5,17 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Sicario Royale P2P</title>
 
-  <!-- PWA & Mobile Settings -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#0d1117">
 
-  <!-- Tailwind CSS & FontAwesome -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <!-- PeerJS Library for P2P Networking -->
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
   <style>
@@ -29,7 +25,6 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between p-4 max-w-md mx-auto">
 
-  <!-- HEADER -->
   <header class="flex justify-between items-center py-3 border-b border-gray-800">
     <div class="flex items-center space-x-2">
       <i class="fa-solid fa-crosshairs text-red-500 text-xl"></i>
@@ -40,10 +35,9 @@
     </div>
   </header>
 
-  <!-- MAIN CONTAINER -->
   <main id="app" class="flex-1 my-4 flex flex-col justify-center">
 
-    <!-- VIEW 1: LOBBY SELECTION -->
+    <!-- VIEW 1: LOBBY -->
     <section id="view-lobby" class="space-y-6">
       <div class="text-center space-y-1">
         <h2 class="text-2xl font-bold">Cacería Urbana</h2>
@@ -51,8 +45,6 @@
       </div>
 
       <div class="space-y-4 bg-gray-900 p-5 rounded-2xl border border-gray-800 shadow-xl">
-        
-        <!-- USERNAME & AVATAR UPLOAD -->
         <div class="flex items-center space-x-4">
           <div class="relative w-16 h-16 rounded-full bg-gray-800 border border-gray-700 overflow-hidden flex items-center justify-center shrink-0 cursor-pointer shadow-inner" onclick="document.getElementById('input-avatar-file').click()">
             <img id="avatar-preview-img" class="w-full h-full object-cover hidden" alt="Avatar">
@@ -93,19 +85,16 @@
       <div class="bg-gray-900 p-6 rounded-2xl border border-gray-800 space-y-4">
         <span class="text-xs text-gray-400 uppercase tracking-widest block">Código de la Sala</span>
         <div id="display-room-code" class="text-3xl font-black text-red-500 font-mono tracking-wider">------</div>
-        <p class="text-xs text-gray-400">Comparte este código con al menos 2 amigos cazadores.</p>
+        <p class="text-xs text-gray-400">IMPORTANTE (iPhone): Usad obligatoriamente <b>Safari</b>.</p>
 
         <div class="py-2">
           <div class="flex justify-between items-center mb-2">
             <h3 class="text-xs font-semibold text-gray-400 uppercase">Cazadores Conectados:</h3>
             <span id="player-count-badge" class="text-xs font-bold text-red-500 font-mono">0 (Mín. 2)</span>
           </div>
-          <ul id="player-list" class="space-y-2 text-left">
-            <!-- Player items inserted dynamically -->
-          </ul>
+          <ul id="player-list" class="space-y-2 text-left"></ul>
         </div>
 
-        <!-- GM CONTROLS & TIMER CONFIG -->
         <div id="gm-controls" class="hidden pt-4 border-t border-gray-800 space-y-3">
           <div class="text-left">
             <label class="block text-xs text-gray-400 mb-1">Tiempo Límite de Ronda:</label>
@@ -126,8 +115,6 @@
 
     <!-- VIEW 3A: ACTIVE GAME (HUNTER HUD) -->
     <section id="view-game-hunter" class="hidden space-y-4">
-
-      <!-- ROUND TIMER BANNER -->
       <div class="bg-gray-900 border border-gray-800 px-4 py-2.5 rounded-xl flex justify-between items-center">
         <span class="text-xs text-gray-400 font-semibold uppercase flex items-center">
           <i class="fa-solid fa-stopwatch text-red-500 mr-2"></i>Tiempo Restante:
@@ -136,11 +123,7 @@
       </div>
 
       <div class="bg-gray-900 border border-gray-800 p-5 rounded-2xl space-y-5 text-center">
-        
-        <!-- MINIMALIST LAYOUT: HUNTER (LEFT) | DISTANCE (CENTER) | TARGET (RIGHT) -->
         <div class="flex justify-between items-center bg-gray-950 p-4 rounded-xl border border-gray-800/80">
-          
-          <!-- LEFT: HUNTER INFO -->
           <div class="flex flex-col items-center space-y-1 w-1/3">
             <div id="hunter-avatar-container" class="w-12 h-12 rounded-full bg-red-600 text-white flex items-center justify-center font-bold text-lg shadow-md overflow-hidden border border-red-500">
               <span id="hunter-avatar-text">U</span>
@@ -149,13 +132,11 @@
             <span class="text-[9px] text-gray-500 uppercase">Cazador</span>
           </div>
 
-          <!-- CENTER: DISTANCE -->
           <div class="flex flex-col items-center justify-center w-1/3 border-x border-gray-800 px-2">
             <span class="text-[9px] text-gray-500 uppercase tracking-wider mb-0.5">Distancia</span>
             <div id="radar-distance" class="text-2xl font-black font-mono text-white">-- <span class="text-xs text-gray-500">m</span></div>
           </div>
 
-          <!-- RIGHT: TARGET INFO -->
           <div class="flex flex-col items-center space-y-1 w-1/3">
             <div id="target-avatar-container" class="w-12 h-12 rounded-full bg-gray-800 border border-gray-700 text-red-500 flex items-center justify-center font-bold text-lg shadow-md overflow-hidden">
               <span id="target-avatar-text">O</span>
@@ -163,14 +144,12 @@
             <span id="target-name" class="text-xs font-bold text-white truncate max-w-[90px]">...</span>
             <span class="text-[9px] text-red-500 uppercase font-semibold">Objetivo</span>
           </div>
-
         </div>
 
         <div class="text-[11px] text-gray-400" id="gps-accuracy">
-          GPS: Calculando precisión...
+          GPS: Buscando señal satelital alta precisión...
         </div>
 
-        <!-- CAMERA BUTTON WITH DISTANCE RESTRICTION (<15m) -->
         <button id="btn-open-camera" onclick="openCamera()" disabled class="w-full bg-gray-800 text-gray-500 font-bold py-4 rounded-xl transition flex items-center justify-center space-x-2 text-sm shadow-lg cursor-not-allowed">
           <i class="fa-solid fa-triangle-exclamation"></i>
           <span id="camera-btn-text">Acércate a menos de 15m para grabar</span>
@@ -178,7 +157,7 @@
       </div>
     </section>
 
-    <!-- VIEW 3B: GAME MASTER DASHBOARD (GM EXCLUSIVE) -->
+    <!-- VIEW 3B: GM DASHBOARD -->
     <section id="view-game-gm" class="hidden space-y-4">
       <div class="bg-gray-900 border border-gray-800 px-4 py-3 rounded-xl flex justify-between items-center">
         <div class="flex items-center space-x-2">
@@ -188,29 +167,24 @@
         <span id="round-timer-gm" class="font-mono text-lg font-black text-red-500">00:00</span>
       </div>
 
-      <!-- LIVE HUNTER STATUS BOARD -->
       <div class="bg-gray-900 border border-gray-800 p-4 rounded-2xl space-y-3">
         <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Estado de los Cazadores</h3>
-        <ul id="gm-status-list" class="space-y-2">
-          <!-- Status items populated dynamically -->
-        </ul>
+        <ul id="gm-status-list" class="space-y-2"></ul>
       </div>
 
-      <!-- GM RECEIVED VIDEOS GALLERY -->
       <div class="bg-gray-900 border border-gray-800 p-4 rounded-2xl space-y-3">
-        <h3 class="text-xs font-bold uppercase text-red-500 tracking-wider">Vídeos Recibidos en Directo (Con Overlay)</h3>
+        <h3 class="text-xs font-bold uppercase text-red-500 tracking-wider">Vídeos Recibidos en Directo</h3>
         <div id="gm-video-list" class="space-y-3 max-h-64 overflow-y-auto pr-1">
           <p id="gm-no-videos-text" class="text-xs text-gray-500 italic">Esperando capturas en vídeo...</p>
         </div>
       </div>
     </section>
 
-    <!-- VIEW 4: CAMERA CAPTURE WITH OVERLAY CANVAS -->
+    <!-- VIEW 4: CAMERA CAPTURE -->
     <section id="view-camera" class="hidden fixed inset-0 bg-black z-50 flex flex-col justify-between">
       <div class="relative flex-1 bg-black flex items-center justify-center">
         <video id="camera-preview" autoplay playsinline muted class="hidden"></video>
         <canvas id="camera-canvas" class="w-full h-full object-cover"></canvas>
-
         <div class="absolute top-6 left-6 bg-black/60 px-3 py-1.5 rounded-full border border-red-500/30 flex items-center space-x-2 pointer-events-none">
           <div class="w-2.5 h-2.5 bg-red-600 rounded-full animate-ping"></div>
           <span class="text-xs font-mono text-white tracking-wider">GRABANDO OVERLAY</span>
@@ -227,13 +201,12 @@
       </div>
     </section>
 
-    <!-- VIEW 5: ELIMINATED SCREEN -->
+    <!-- VIEW 5: ELIMINATED -->
     <section id="view-eliminated" class="hidden text-center space-y-4">
       <div class="bg-gray-900 p-6 rounded-2xl border border-red-900/50 space-y-4">
         <i class="fa-solid fa-skull-crossbones text-5xl text-red-500 animate-pulse"></i>
         <h2 class="text-xl font-bold text-white">¡Has Sido Eliminado!</h2>
         <p class="text-xs text-gray-400">Tu objetivo te ha cazado o has caído en combate.</p>
-
         <div class="pt-3 border-t border-gray-800 text-left space-y-2">
           <span class="text-xs font-bold text-red-500 uppercase tracking-wider block">📍 Punto de Encuentro (Game Master)</span>
           <div id="gm-location-info-eliminated" class="p-3 bg-gray-950 rounded-xl text-center font-mono text-xs text-white border border-gray-800">
@@ -243,13 +216,12 @@
       </div>
     </section>
 
-    <!-- VIEW 6: VICTORY ROYALE -->
+    <!-- VIEW 6: VICTORY -->
     <section id="view-victory" class="hidden text-center space-y-4">
       <div class="bg-gray-900 p-6 rounded-2xl border border-yellow-500/50 space-y-4">
         <i class="fa-solid fa-trophy text-5xl text-yellow-400 animate-bounce"></i>
         <h2 class="text-2xl font-black text-white">¡VICTORIA ROYALE!</h2>
-        <p class="text-xs text-gray-400">¡Eres el último cazador en pie! Has ganado la partida.</p>
-
+        <p class="text-xs text-gray-400">¡Eres el último cazador en pie!</p>
         <div class="pt-3 border-t border-gray-800 text-left space-y-2">
           <span class="text-xs font-bold text-yellow-500 uppercase tracking-wider block">📍 Punto de Encuentro (Game Master)</span>
           <div id="gm-location-info-victory" class="p-3 bg-gray-950 rounded-xl text-center font-mono text-xs text-white border border-gray-800">
@@ -259,13 +231,12 @@
       </div>
     </section>
 
-    <!-- VIEW 7: TIME EXPIRED -->
+    <!-- VIEW 7: TIMEOUT -->
     <section id="view-timeout" class="hidden text-center space-y-4">
       <div class="bg-gray-900 p-6 rounded-2xl border border-red-900/50 space-y-4">
         <i class="fa-solid fa-hourglass-end text-5xl text-red-500"></i>
         <h2 class="text-xl font-bold text-white">¡Tiempo Agotado!</h2>
-        <p class="text-xs text-gray-400">Ha finalizado el tiempo límite de la ronda.</p>
-
+        <p class="text-xs text-gray-400">Fin del tiempo límite.</p>
         <div class="pt-3 border-t border-gray-800 text-left space-y-2">
           <span class="text-xs font-bold text-red-500 uppercase tracking-wider block">📍 Punto de Encuentro (Game Master)</span>
           <div id="gm-location-info-timeout" class="p-3 bg-gray-950 rounded-xl text-center font-mono text-xs text-white border border-gray-800">
@@ -277,12 +248,10 @@
 
   </main>
 
-  <!-- FOOTER -->
   <footer class="text-center py-2 text-xs text-gray-600">
     Sicario Royale P2P
   </footer>
 
-  <!-- GAME LOGIC SCRIPT -->
   <script>
     let peer = null;
     let connections = []; 
@@ -324,12 +293,28 @@
 
     function initPeer(customId = null) {
       return new Promise((resolve) => {
-        peer = customId ? new Peer(customId) : new Peer();
+        // Configuración de servidores STUN públicos de Google para conectar dispositivos en red móvil (Android/iPhone)
+        const peerOptions = {
+          config: {
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+          }
+        };
+
+        peer = customId ? new Peer(customId, peerOptions) : new Peer(peerOptions);
+
         peer.on('open', (id) => {
           myId = id;
           document.getElementById('status-badge').textContent = 'P2P Activo';
           document.getElementById('status-badge').className = 'px-2 py-0.5 text-[10px] rounded-full bg-green-950 text-green-400 font-mono border border-green-800';
           resolve(id);
+        });
+
+        peer.on('error', (err) => {
+          console.error("Peer error:", err);
+          alert("Error de conexión P2P en red móvil. Asegúrate de usar Safari si estás en iPhone.");
         });
       });
     }
@@ -362,14 +347,24 @@
 
       if(!roomCode) return alert('Introduce un código de sala válido.');
 
+      // Advertencia útil para usuarios de iPhone
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      if (isIOS && !window.navigator.standalone && !window.matchMedia('(display-mode: standalone)').matches) {
+        console.log("Usuario en iOS detectado");
+      }
+
       await initPeer();
-      hostConn = peer.connect(roomCode);
+      hostConn = peer.connect(roomCode, { reliable: true });
 
       hostConn.on('open', () => {
         hostConn.send({ type: 'JOIN', name: myUsername, avatar: myAvatarBase64, id: myId });
         switchView('view-waiting');
         document.getElementById('display-room-code').textContent = roomCode;
         startGPS();
+      });
+
+      hostConn.on('error', (err) => {
+        alert("No se pudo conectar con la sala. Verifica el código o que el Game Master tenga la app abierta.");
       });
 
       hostConn.on('data', (data) => handlePlayerData(data));
@@ -519,7 +514,6 @@
       const distFormatted = isNaN(distance) || distance === 0 ? '--' : Math.round(distance);
       document.getElementById('radar-distance').innerHTML = `${distFormatted} <span class="text-xs text-gray-500">m</span>`;
 
-      // Check distance threshold (< 15 meters to unlock camera)
       const btnCam = document.getElementById('btn-open-camera');
       const camText = document.getElementById('camera-btn-text');
       if(!isNaN(distance) && distance <= 15) {
@@ -542,7 +536,7 @@
         <li class="bg-gray-800 px-3 py-2 rounded-xl text-xs flex justify-between items-center">
           <span class="flex items-center space-x-2">
             <div class="w-6 h-6 rounded-full bg-gray-700 overflow-hidden flex items-center justify-center font-bold text-[10px]">
-              ${p.avatar ? `<img src="\${p.avatar}" class="w-full h-full object-cover">` : p.name.charAt(0)}
+              ${p.avatar ? `<img src="${p.avatar}" class="w-full h-full object-cover">` : p.name.charAt(0)}
             </div>
             <span>${p.name}</span>
           </span>
@@ -565,7 +559,7 @@
           <li class="bg-gray-950 p-3 rounded-xl border border-gray-800 flex justify-between items-center text-xs">
             <div class="flex items-center space-x-2">
               <div class="w-7 h-7 rounded-full bg-gray-800 overflow-hidden flex items-center justify-center font-bold text-[10px]">
-                ${h.avatar ? `<img src="\${h.avatar}" class="w-full h-full object-cover">` : h.name.charAt(0)}
+                ${h.avatar ? `<img src="${h.avatar}" class="w-full h-full object-cover">` : h.name.charAt(0)}
               </div>
               <div>
                 <div class="font-bold text-white">${h.name}</div>
@@ -590,14 +584,14 @@
           myCoords.accuracy = Math.round(pos.coords.accuracy);
 
           const accuracyEl = document.getElementById('gps-accuracy');
-          if(accuracyEl) accuracyEl.textContent = `Precisión GPS: ${myCoords.accuracy} m`;
+          if(accuracyEl) accuracyEl.textContent = `Precisión GPS: ${myCoords.accuracy} m (Alta)`;
 
           if(!isGM && hostConn && hostConn.open) {
             hostConn.send({ type: 'GPS_UPDATE', id: myId, lat: myCoords.lat, lng: myCoords.lng });
           } else if(isGM) {
             calculateAndBroadcastTargets();
           }
-        }, err => console.error(err), { enableHighAccuracy: true });
+        }, err => console.error(err), { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 });
       }
     }
 
@@ -617,10 +611,9 @@
         const video = document.getElementById('camera-preview');
         video.srcObject = stream;
         await video.play();
-
         startCanvasOverlayLoop();
       } catch(e) {
-        alert('Error al acceder a la cámara.');
+        alert('Error al acceder a la cámara. Revisa los permisos.');
       }
     }
 
